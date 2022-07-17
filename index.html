@@ -30,6 +30,7 @@
         uniform float sceneX;
         uniform float sceneY;
         uniform float sceneZ;
+        uniform float mist;
         
         uniform float uZoom;
 
@@ -117,7 +118,7 @@
             vec3 final_color = mix(base_color, light_color, light_factor * 0.7);
 
             if (t > 1000.) 0.0;
-            else return mix(final_color, vec3(212, 236, 255) / 255., t / 10.);
+            else return mix(final_color, vec3(212, 236, 255) / 255., t / mist);
         }
 
         void main() {
@@ -199,7 +200,7 @@
                 <label>z:</label> <input id="cameraZ" type="text" size="2" />
             </div>
             <div class="section">Camera Intrinsics</div>
-            <label>Zoom:</label> <input id="zoom" type="text" size="2" />
+            <label>Zoom:</label> <input id="zoom" type="text" size="2" /> <label>Mist:</label> <input id="mist" type="text" size="2" />
             <div class="section">Scene XYZ translation</div>
             <div class="control" style="margin-bottom: 10px;">
                 <label>x:</label> <input id="sceneX" type="text" size="2" />

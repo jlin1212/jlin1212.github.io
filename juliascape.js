@@ -9,6 +9,7 @@ var zoomFactor = 1.3;
 var sceneX = 3.8;
 var sceneY = 3.5;
 var sceneZ = -1;
+var mist = 10.;
 
 function main() {
     console.log('juliascape by jonathan lin')
@@ -22,6 +23,7 @@ function main() {
     document.querySelector('#sceneX').value = sceneX;
     document.querySelector('#sceneY').value = sceneY;
     document.querySelector('#sceneZ').value = sceneZ;
+    document.querySelector('#mist').value = mist;
 
     glCanvas = document.querySelector('#glCanvas');
     gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true });
@@ -111,6 +113,7 @@ function draw() {
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneX'), parseFloat(document.querySelector('#sceneX').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneY'), parseFloat(document.querySelector('#sceneY').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneZ'), parseFloat(document.querySelector('#sceneZ').value));
+    gl.uniform1f(gl.getUniformLocation(quadProgram, 'mist'), parseFloat(document.querySelector('#mist').value));
     
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
