@@ -88,26 +88,36 @@
 
             vec3 delta_xyz = vec3(sceneX, sceneY, sceneZ);
             float scale_factor = 10.0;
+
+            float imp_julia;
+            vec3 imp_grad, p_transform;
+            float sdf_value;
             
             for (int i = 0; i < 100; i++) {
-                t = t + 0.3 * sdf_julia((p - delta_xyz) / scale_factor, c) * scale_factor;
+                p_transform = (p - delta_xyz) / scale_factor;
+                imp_julia = implicit_julia(p_transform, c);
+                imp_grad = implicit_julia_grad(p_transform, c);
+
+                sdf_value = abs(imp_julia) / length(imp_grad);
+
+                t = t + 0.3 * sdf_value * scale_factor;
                 p = ro + t * rd;
             }
 
             float heightVal = p.z - delta_xyz.z;
-            vec3 normal = normalize(implicit_julia_grad((p - delta_xyz) / scale_factor, c));
+            vec3 normal = normalize(imp_grad);
 
-            float light_factor = clamp(dot(normalize(vec3(0.01, 0.1, 0.1)), normal), 0.0, 1.0);
-            vec3 light_color = vec3(179, 45, 0) / 255.;
+            float light_factor = clamp(dot(normalize(vec3(0.01, 0.1, 0.01)), normal), 0.0, 1.0);
+            vec3 light_color = vec3(212, 236, 255) / 255.;
             vec3 base_color = vec3(37, 89, 179) * 0.6 / 255.;
             
             // Use colormap
-            base_color = texture2D(uColormap, vec2(clamp(abs(heightVal) / 0.2, 0.0, 0.8), 1.0)).xyz * 0.7;
+            base_color = texture2D(uColormap, vec2(clamp(abs(heightVal) / 3., 0.0, 0.9), 0.25)).xyz; //
 
-            vec3 final_color = mix(base_color, light_color, light_factor * 0.3);
+            vec3 final_color = mix(base_color, light_color, light_factor * 0.7);
 
             if (t > 1000.) 0.0;
-            else return mix(final_color, vec3(1), t / 100.);
+            else return mix(final_color, vec3(212, 236, 255) / 255., t / 10.);
         }
 
         void main() {

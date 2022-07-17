@@ -24,7 +24,7 @@ function main() {
     document.querySelector('#sceneZ').value = sceneZ;
 
     glCanvas = document.querySelector('#glCanvas');
-    gl = glCanvas.getContext('webgl');
+    gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true });
 
     document.querySelector('#renderButton').onmousedown = draw;
     document.querySelector('#saveButton').onmousedown = save;
@@ -79,7 +79,7 @@ function main() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 255, 255, 255]));
 
     var colormapImage = new Image();
-    colormapImage.src = 'colormap-iridescent.png';
+    colormapImage.src = 'colormap-utah.png';
     
     let colormapUniformLocation = gl.getUniformLocation(quadProgram, 'uColormap');
     gl.uniform1i(colormapUniformLocation, 0);
