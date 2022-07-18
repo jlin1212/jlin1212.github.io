@@ -197,6 +197,10 @@
         body {
             background-color: black;
         }
+
+        #colormap {
+            display: inline-block;
+        }
     </style>
     <body>
         <div id="settings">
@@ -220,6 +224,12 @@
                 <label>y:</label> <input id="sceneY" type="text" size="2" />
                 <label>z:</label> <input id="sceneZ" type="text" size="2" />
             </div>
+            <div class="section">Colormap</div>
+            <select id="colormap">
+                <option value="utah">Utah</option>
+                <option value="snow">Snow</option>
+                <option value="lava">Lava</option>
+            </select><br />
             <button id="renderButton">Render</button><button id="saveButton">Save</button>
         </div>
         <canvas id="glCanvas"></canvas>

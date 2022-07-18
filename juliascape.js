@@ -1,4 +1,4 @@
-var glCanvas, gl, zoomUniformLocation, chunkXLocation, chunkYLocation, quadProgram;
+var glCanvas, gl, zoomUniformLocation, chunkXLocation, chunkYLocation, quadProgram, colormapTexture;
 
 var complexA = 0.285;
 var complexB = 0.01;
@@ -15,6 +15,8 @@ var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 var chunkSize = isMobile ? 80 : 100;
 
 function main() {
+    document.querySelector('#colormap').onchange = changeColormap;
+
     console.log('juliascape by jonathan lin')
 
     document.querySelector('#complexA').value = complexA;
@@ -89,7 +91,7 @@ function main() {
     // Load colormap texture
     gl.activeTexture(gl.TEXTURE0);
 
-    var colormapTexture = gl.createTexture();
+    colormapTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, colormapTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 255, 255, 255]));
 
@@ -111,6 +113,22 @@ function main() {
     zoomUniformLocation = gl.getUniformLocation(quadProgram, 'uZoom');
 
     console.log(gl.canvas.width / gl.canvas.height);
+}
+
+function changeColormap() {
+    var colormapImage = new Image();
+    colormapImage.src = 'colormap-' + document.querySelector('#colormap').value + '.png';
+
+    let colormapUniformLocation = gl.getUniformLocation(quadProgram, 'uColormap');
+    gl.uniform1i(colormapUniformLocation, 0);
+
+    colormapImage.addEventListener('load', function() {
+        console.log('loaded colormap');
+        console.log(colormapImage);
+        gl.bindTexture(gl.TEXTURE_2D, colormapTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, colormapImage);
+        gl.generateMipmap(gl.TEXTURE_2D);
+    });
 }
 
 async function draw() {
