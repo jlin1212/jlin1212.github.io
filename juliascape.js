@@ -1,15 +1,17 @@
-var glCanvas, gl, zoomUniformLocation, quadProgram;
+var glCanvas, gl, zoomUniformLocation, chunkXLocation, chunkYLocation, quadProgram;
 
 var complexA = 0.285;
 var complexB = 0.01;
 var cameraX = 0;
 var cameraY = 4;
-var cameraZ = -2;
+var cameraZ = -6;
 var zoomFactor = 1.3;
 var sceneX = 3.8;
 var sceneY = 3.5;
 var sceneZ = -1;
-var mist = 10.;
+var mist = 25.;
+
+var chunkSize = ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ? 10 : 100;
 
 function main() {
     console.log('juliascape by jonathan lin')
@@ -31,8 +33,13 @@ function main() {
     document.querySelector('#renderButton').onmousedown = draw;
     document.querySelector('#saveButton').onmousedown = save;
 
-    glCanvas.height = window.innerHeight;
-    glCanvas.width = window.innerWidth;
+    glCanvas.height = window.innerHeight * 2;
+    glCanvas.width = window.innerWidth * 2;
+    glCanvas.style.height = '100vh';
+
+    // glCanvas.height = 16.16 * 300;
+    // glCanvas.width = 20.16 * 300;
+    // glCanvas.style.height = '80vh';
 
     quadProgram = createProgramFromScripts(gl, ['quadVertexShader', 'quadFragmentShader']);
 
@@ -52,12 +59,17 @@ function main() {
     ]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, 100, 100);
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(quadProgram);
+
+    // Pass chunk dimensions
+    chunkXLocation = gl.getUniformLocation(quadProgram, 'chunkX');
+    chunkYLocation = gl.getUniformLocation(quadProgram, 'chunkY');
 
     // Quad vertices
     gl.enableVertexAttribArray(positionAttributeLocation);
@@ -100,7 +112,7 @@ function main() {
     console.log(gl.canvas.width / gl.canvas.height);
 }
 
-function draw() {
+async function draw() {
     console.log('draw');
     gl.uniform1f(zoomUniformLocation, zoomFactor);
     
@@ -114,12 +126,26 @@ function draw() {
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneY'), parseFloat(document.querySelector('#sceneY').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneZ'), parseFloat(document.querySelector('#sceneZ').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'mist'), parseFloat(document.querySelector('#mist').value));
-    
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    for (let i = 0; i < Math.ceil(gl.canvas.width / chunkSize); i++) {
+        for (let j = 0; j < Math.ceil(gl.canvas.height / chunkSize); j++) {
+            gl.viewport(chunkSize * i, chunkSize * j, chunkSize, chunkSize);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            await delay(1);
+        }
+    }
 }
 
+function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
 function save() {
-    alert('Right click on the image and choose "Save Image As...", ya dingus!');
+    var data = glCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    var canvasLink = document.querySelector('#canvasLink');
+    canvasLink.setAttribute('download', 'render.png');
+    canvasLink.setAttribute('href', data);
+    canvasLink.click();
 }
 
 window.onload = main;
