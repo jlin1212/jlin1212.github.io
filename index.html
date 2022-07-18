@@ -31,6 +31,7 @@
         uniform float sceneY;
         uniform float sceneZ;
         uniform float mist;
+        uniform float heightScale;
         
         uniform float uZoom;
 
@@ -113,7 +114,7 @@
             vec3 base_color = vec3(37, 89, 179) * 0.6 / 255.;
             
             // Use colormap
-            base_color = texture2D(uColormap, vec2(clamp(abs(heightVal) / 3., 0.0, 0.9), 0.25)).xyz; //
+            base_color = texture2D(uColormap, vec2(clamp(abs(heightVal) / heightScale, 0.0, 0.9), 0.25)).xyz; //
 
             vec3 final_color = mix(base_color, light_color, light_factor * 0.7);
 
@@ -219,17 +220,22 @@
             <div class="section">Camera Intrinsics</div>
             <label>Zoom:</label> <input id="zoom" type="text" size="2" /> <label>Mist:</label> <input id="mist" type="text" size="2" />
             <div class="section">Scene XYZ translation</div>
-            <div class="control" style="margin-bottom: 10px;">
+            <div class="control">
                 <label>x:</label> <input id="sceneX" type="text" size="2" />
                 <label>y:</label> <input id="sceneY" type="text" size="2" />
                 <label>z:</label> <input id="sceneZ" type="text" size="2" />
             </div>
             <div class="section">Colormap</div>
-            <select id="colormap">
-                <option value="utah">Utah</option>
-                <option value="snow">Snow</option>
-                <option value="lava">Lava</option>
-            </select><br />
+            <div class="control" style="margin-bottom: 10px;">
+                <select id="colormap">
+                    <option value="utah">Utah</option>
+                    <option value="snow">Snow</option>
+                    <option value="lava">Lava</option>
+                </select>
+            </div>
+            <div class="control" style="margin-bottom: 10px;">
+                <label title="Adjust this when you zoom in (smaller values for higher zooms)">Height Scale:</label> <input id="heightScale" type="text" size="2" />
+            </div>
             <button id="renderButton">Render</button><button id="saveButton">Save</button>
         </div>
         <canvas id="glCanvas"></canvas>

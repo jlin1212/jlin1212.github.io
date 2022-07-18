@@ -10,6 +10,7 @@ var sceneX = 3.8;
 var sceneY = 3.5;
 var sceneZ = -1;
 var mist = 25.;
+var heightScale = 3.;
 
 var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 var chunkSize = isMobile ? 80 : 100;
@@ -29,6 +30,7 @@ function main() {
     document.querySelector('#sceneY').value = sceneY;
     document.querySelector('#sceneZ').value = sceneZ;
     document.querySelector('#mist').value = mist;
+    document.querySelector('#heightScale').value = heightScale;
 
     glCanvas = document.querySelector('#glCanvas');
     gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true });
@@ -131,10 +133,14 @@ function changeColormap() {
     });
 }
 
+function updateSceneParam(uniform, id) {
+    gl.uniform1f(gl.getUniformLocation(quadProgram, uniform), parseFloat(document.querySelector('#' + id).value));
+}
+
 async function draw() {
     console.log('draw');
     gl.uniform1f(zoomUniformLocation, zoomFactor);
-    
+
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'complexA'), parseFloat(document.querySelector('#complexA').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'complexB'), parseFloat(document.querySelector('#complexB').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'cameraX'), parseFloat(document.querySelector('#cameraX').value));
@@ -145,6 +151,7 @@ async function draw() {
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneY'), parseFloat(document.querySelector('#sceneY').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneZ'), parseFloat(document.querySelector('#sceneZ').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'mist'), parseFloat(document.querySelector('#mist').value));
+    gl.uniform1f(gl.getUniformLocation(quadProgram, 'heightScale'), parseFloat(document.querySelector('#heightScale').value));
 
     for (let i = 0; i < Math.ceil(gl.canvas.width / chunkSize); i++) {
         for (let j = 0; j < Math.ceil(gl.canvas.height / chunkSize); j++) {
