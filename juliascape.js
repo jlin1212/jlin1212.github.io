@@ -11,7 +11,8 @@ var sceneY = 3.5;
 var sceneZ = -1;
 var mist = 25.;
 
-var chunkSize = ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ? 10 : 100;
+var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+var chunkSize = isMobile ? 300 : 100;
 
 function main() {
     console.log('juliascape by jonathan lin')
@@ -35,7 +36,7 @@ function main() {
 
     glCanvas.height = window.innerHeight * 2;
     glCanvas.width = window.innerWidth * 2;
-    glCanvas.style.height = '100vh';
+    if (!isMobile) glCanvas.style.height = '100vh';
 
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
@@ -131,14 +132,14 @@ async function draw() {
         for (let j = 0; j < Math.ceil(gl.canvas.height / chunkSize); j++) {
             gl.viewport(chunkSize * i, chunkSize * j, chunkSize, chunkSize);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-            await delay(1);
+            await delay(isMobile ? 10000 : 3);
         }
     }
 }
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
-  }
+}
 
 function save() {
     var data = glCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
