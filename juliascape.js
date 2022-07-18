@@ -12,7 +12,7 @@ var sceneZ = -1;
 var mist = 25.;
 
 var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-var chunkSize = isMobile ? 300 : 100;
+var chunkSize = isMobile ? 80 : 100;
 
 function main() {
     console.log('juliascape by jonathan lin')
@@ -132,7 +132,7 @@ async function draw() {
         for (let j = 0; j < Math.ceil(gl.canvas.height / chunkSize); j++) {
             gl.viewport(chunkSize * i, chunkSize * j, chunkSize, chunkSize);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-            await delay(isMobile ? 10000 : 3);
+            await delay(isMobile ? 100 : 3);
         }
     }
 }
