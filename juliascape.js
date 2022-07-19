@@ -54,11 +54,11 @@ function main() {
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
     
-    glCanvas.style.width = '80vw';
-    glCanvas.style.height = 'auto';
+    // glCanvas.style.width = '80vw';
+    // glCanvas.style.height = 'auto';
 
-    glCanvas.height = 2160;
-    glCanvas.width = 3840;
+    // glCanvas.height = 2160;
+    // glCanvas.width = 3840;
 
     quadProgram = createProgramFromScripts(gl, ['quadVertexShader', 'quadFragmentShader']);
 
