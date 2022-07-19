@@ -1,7 +1,7 @@
 <!-- juliascape by jonathan lin :D -->
 <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, height=device-height, minimum-scale=1, initial-scale=1">
         <title>Juliascape</title>
     </head>
     <style>
@@ -210,7 +210,7 @@
             padding: 5px;
         }
 
-        #saveButton {
+        #saveButton, #hideButton {
             margin-left: 5px;
         }
 
@@ -238,38 +238,41 @@
     </style>
     <body>
         <div id="settings">
-            <h1>Juliascape</h1>
-            <div class="section">z^2 + c : complex parameter c</div>
-            <div class="control">
-                <label>a:</label> <input id="complexA" type="text" size="2" />
-                <label>b:</label> <input id="complexB" type="text" size="2" />
+            <h1>Juliascape <button id="showButton" style="display: none">Show</button></h1>
+            <div id="container">
+                <div class="section">z^2 + c : complex parameter c</div>
+                <div class="control">
+                    <label>a:</label> <input id="complexA" type="text" size="2" />
+                    <label>b:</label> <input id="complexB" type="text" size="2" />
+                </div>
+                <div class="section">Camera Position</div>
+                <div class="control">
+                    <label>x:</label> <input id="cameraX" type="text" size="2" />
+                    <label>y:</label> <input id="cameraY" type="text" size="2" />
+                    <label>z:</label> <input id="cameraZ" type="text" size="2" />
+                </div>
+                <div class="section">Camera Intrinsics</div>
+                <label>Zoom:</label> <input id="zoom" type="text" size="2" /> <label>Mist:</label> <input id="mist" type="text" size="2" />
+                <div class="section">Scene XYZ translation</div>
+                <div class="control">
+                    <label>x:</label> <input id="sceneX" type="text" size="2" />
+                    <label>y:</label> <input id="sceneY" type="text" size="2" />
+                    <label>z:</label> <input id="sceneZ" type="text" size="2" />
+                </div>
+                <div class="section">Colormap</div>
+                <div class="control" style="margin-bottom: 10px;">
+                    <select id="colormap">
+                        <option value="utah">Utah</option>
+                        <option value="snow">Snow</option>
+                        <option value="lava">Lava</option>
+                    </select>
+                </div>
+                <div class="control" style="margin-bottom: 10px;">
+                    <label title="Adjust this when you zoom in (smaller values for higher zooms)">Height Scale:</label> <input id="heightScale" type="text" size="2" />
+                    <br /><br /><i>Try lowering this parameter if things are fuzzy.</i>
+                </div>
+                <button id="renderButton">Render</button><button id="saveButton">Save</button><button id="hideButton">Hide</button>
             </div>
-            <div class="section">Camera Position</div>
-            <div class="control">
-                <label>x:</label> <input id="cameraX" type="text" size="2" />
-                <label>y:</label> <input id="cameraY" type="text" size="2" />
-                <label>z:</label> <input id="cameraZ" type="text" size="2" />
-            </div>
-            <div class="section">Camera Intrinsics</div>
-            <label>Zoom:</label> <input id="zoom" type="text" size="2" /> <label>Mist:</label> <input id="mist" type="text" size="2" />
-            <div class="section">Scene XYZ translation</div>
-            <div class="control">
-                <label>x:</label> <input id="sceneX" type="text" size="2" />
-                <label>y:</label> <input id="sceneY" type="text" size="2" />
-                <label>z:</label> <input id="sceneZ" type="text" size="2" />
-            </div>
-            <div class="section">Colormap</div>
-            <div class="control" style="margin-bottom: 10px;">
-                <select id="colormap">
-                    <option value="utah">Utah</option>
-                    <option value="snow">Snow</option>
-                    <option value="lava">Lava</option>
-                </select>
-            </div>
-            <div class="control" style="margin-bottom: 10px;">
-                <label title="Adjust this when you zoom in (smaller values for higher zooms)">Height Scale:</label> <input id="heightScale" type="text" size="2" />
-            </div>
-            <button id="renderButton">Render</button><button id="saveButton">Save</button>
         </div>
         <canvas id="glCanvas"></canvas>
         <a id="canvasLink"></a>

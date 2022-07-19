@@ -17,6 +17,8 @@ var chunkSize = isMobile ? 80 : 100;
 
 function main() {
     document.querySelector('#colormap').onchange = changeColormap;
+    document.querySelector('#hideButton').onclick = hideSettings;
+    document.querySelector('#showButton').onclick = showSettings;
 
     console.log('juliascape by jonathan lin')
 
@@ -40,7 +42,14 @@ function main() {
 
     glCanvas.height = window.innerHeight * 2;
     glCanvas.width = window.innerWidth * 2;
-    if (!isMobile) glCanvas.style.height = '100vh';
+    
+    glCanvas.style.height = '100vh';
+    glCanvas.style.width = '100vw';
+
+    if (isMobile) {
+        document.querySelector('#settings').style.fontSize = '5pt';
+        document.querySelectorAll('input, button, select').forEach(elem => elem.style.fontSize = '5pt');
+    }
 
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
@@ -145,7 +154,21 @@ function updateSceneParam(uniform, id) {
     gl.uniform1f(gl.getUniformLocation(quadProgram, uniform), parseFloat(document.querySelector('#' + id).value));
 }
 
+function hideSettings() {
+    document.querySelector('#showButton').style.display = 'inline-block';
+    document.querySelector('#container').style.display = 'none';
+}
+
+function showSettings() {
+    document.querySelector('#showButton').style.display = 'none';
+    document.querySelector('#container').style.display = 'block';
+}
+
 async function draw() {
+    let camZVal = parseFloat(document.querySelector('#cameraZ').value);
+
+    if (Math.abs(camZVal) < 0.5 && !confirm('This setting will almost certainly crash your device / produce gibberish. Continue?')) return;
+
     console.log('draw');
     gl.uniform1f(zoomUniformLocation, zoomFactor);
 
@@ -153,7 +176,7 @@ async function draw() {
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'complexB'), parseFloat(document.querySelector('#complexB').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'cameraX'), parseFloat(document.querySelector('#cameraX').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'cameraY'), parseFloat(document.querySelector('#cameraY').value));
-    gl.uniform1f(gl.getUniformLocation(quadProgram, 'cameraZ'), parseFloat(document.querySelector('#cameraZ').value));
+    gl.uniform1f(gl.getUniformLocation(quadProgram, 'cameraZ'), camZVal);
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'zoomFactor'), parseFloat(document.querySelector('#zoom').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneX'), parseFloat(document.querySelector('#sceneX').value));
     gl.uniform1f(gl.getUniformLocation(quadProgram, 'sceneY'), parseFloat(document.querySelector('#sceneY').value));
