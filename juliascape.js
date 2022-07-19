@@ -44,7 +44,12 @@ function main() {
 
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
-    // glCanvas.style.height = '80vh';
+    
+    glCanvas.style.width = '80vw';
+    glCanvas.style.height = 'auto';
+
+    glCanvas.height = 1080 * 2;
+    glCanvas.width = 1920 * 2;
 
     quadProgram = createProgramFromScripts(gl, ['quadVertexShader', 'quadFragmentShader']);
 
@@ -160,6 +165,8 @@ async function draw() {
             await delay(isMobile ? 100 : 3);
         }
     }
+
+    console.log('done drawing')
 }
 
 function delay(time) {
@@ -172,6 +179,45 @@ function save() {
     canvasLink.setAttribute('download', 'render.png');
     canvasLink.setAttribute('href', data);
     canvasLink.click();
+}
+
+async function canvasSaveServer() {
+    let canvasContent = glCanvas.toDataURL('image/png');
+    await new Promise(resolve => {
+        let xhr = new XMLHttpRequest();
+        let formData = new FormData();
+        formData.set('image', canvasContent.substring('data:image/png;base64,'.length));
+        formData.set('folder', 'juliazoom2');
+        xhr.open('POST', 'http://127.0.0.1:8585');
+        xhr.send(formData);
+        
+        xhr.onload = resolve;
+    });
+}
+
+async function animationLoop() {
+    let startZoom = 1.3;
+    let endZoom = 1300;
+    let startScale = 3;
+    let alpha = 0.01;
+
+    let timesteps = -Math.ceil(Math.log2(startZoom / endZoom) / alpha);
+
+    console.log(timesteps);
+
+    await canvasSaveServer();
+    await delay(100);
+
+    for (let t = 2; t <= timesteps; t++) {
+        document.querySelector('#zoom').value = startZoom * Math.pow(2, alpha * t);
+        document.querySelector('#heightScale').value = startScale * Math.pow(2, -alpha * t);
+        await draw();
+        await canvasSaveServer();
+        await delay(100);
+        console.log('rendering progress ' + ((t / timesteps) * 100) + '% (' + t + '/' + timesteps + ')');
+    }
+
+    console.log('animation loop concluded')
 }
 
 window.onload = main;
