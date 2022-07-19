@@ -1,6 +1,7 @@
 <!-- juliascape by jonathan lin :D -->
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Juliascape</title>
     </head>
     <style>
@@ -34,10 +35,12 @@
         uniform float heightScale;
         
         uniform float uZoom;
+        uniform bool isMobile;
 
         #define EPS 0.0001
 
         vec2 cadd(vec2 a, vec2 b) { return a + b; }
+        vec2 ccnj(vec2 a) { return vec2(a.x, -a.y); }
         vec2 cmul(vec2 a, vec2 b) { return vec2( a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x ); }
         vec2 csqr(vec2 a) { return vec2(a.x * a.x - a.y * a.y, 2. * a.x * a.y); }
 
@@ -54,6 +57,24 @@
             float distance_estimate = length(z) * log(length(z)) / length(z_prime);
 
             return distance_estimate * 1.2;
+        }
+
+        void julia_distance_arr(vec2 p, vec2 c, inout float outputs[3]) {
+            vec2 z = p;
+            vec2 z_prime = vec2(1., 0.);
+
+            for (int i = 0; i < 1024; i++) {
+                z_prime = cmul(vec2(2.0, 0.0), cmul(z, z_prime));
+                z = cadd(csqr(z), c);
+                if (length(z) > pow(10., 1.)) { break; }
+            }
+
+            float distance_estimate = length(z) * log(length(z)) / length(z_prime);
+            vec2 normal_estimate = (z * ccnj(z_prime)) / (pow(2., 13.) * length(z) * length(z));
+
+            outputs[0] = distance_estimate * 1.2;
+            outputs[1] = 0.;
+            outputs[2] = 0.;
         }
 
         mat3 camera_matrix(vec3 from, vec3 to, vec3 up) {
@@ -93,16 +114,28 @@
 
             float imp_julia;
             vec3 imp_grad, p_transform;
-            float sdf_value;
+            float sdf_value, sdf_coeff;
+            
+            float dist_outputs[3];
             
             for (int i = 0; i < 100; i++) {
                 p_transform = (p - delta_xyz) / scale_factor;
-                imp_julia = implicit_julia(p_transform, c);
-                imp_grad = implicit_julia_grad(p_transform, c);
+
+                julia_distance_arr(p_transform.xy, c, dist_outputs);
+
+                if (isMobile) {
+                    imp_julia = dist_outputs[0] + p_transform.z;
+                    imp_grad = vec3(dist_outputs[1], dist_outputs[2], 1.);
+                } else {
+                    imp_julia = dist_outputs[0] + p_transform.z;
+                    imp_grad = implicit_julia_grad(p_transform, c);
+                }
 
                 sdf_value = abs(imp_julia) / length(imp_grad);
 
-                t = t + 0.3 * sdf_value * scale_factor;
+                sdf_coeff = (isMobile) ? 0.1 : 0.3;
+
+                t = t + sdf_coeff * sdf_value * scale_factor;
                 p = ro + t * rd;
             }
 
@@ -153,7 +186,7 @@
             text-align: center;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 9pt;
-            margin: 10px;
+            margin: 2vw;
             text-shadow: 0px 3px 5px black;
             right: 0;
         }

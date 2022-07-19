@@ -45,11 +45,11 @@ function main() {
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
     
-    glCanvas.style.width = '80vw';
-    glCanvas.style.height = 'auto';
+    // glCanvas.style.width = '80vw';
+    // glCanvas.style.height = 'auto';
 
-    glCanvas.height = 1080 * 2;
-    glCanvas.width = 1920 * 2;
+    // glCanvas.height = 1080 * 2;
+    // glCanvas.width = 1920 * 2;
 
     quadProgram = createProgramFromScripts(gl, ['quadVertexShader', 'quadFragmentShader']);
 
@@ -76,6 +76,9 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(quadProgram);
+
+    // Pass isMobile
+    gl.uniform1i(gl.getUniformLocation(quadProgram, 'isMobile'), isMobile ? 1 : 0);
 
     // Pass chunk dimensions
     chunkXLocation = gl.getUniformLocation(quadProgram, 'chunkX');
@@ -162,7 +165,7 @@ async function draw() {
         for (let j = 0; j < Math.ceil(gl.canvas.height / chunkSize); j++) {
             gl.viewport(chunkSize * i, chunkSize * j, chunkSize, chunkSize);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-            await delay(isMobile ? 100 : 3);
+            await delay(isMobile ? 10 : 3);
         }
     }
 
