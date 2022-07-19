@@ -54,11 +54,11 @@ function main() {
     // glCanvas.height = 16.16 * 300;
     // glCanvas.width = 20.16 * 300;
     
-    // glCanvas.style.width = '80vw';
-    // glCanvas.style.height = 'auto';
+    glCanvas.style.width = '80vw';
+    glCanvas.style.height = 'auto';
 
-    // glCanvas.height = 1080 * 2;
-    // glCanvas.width = 1920 * 2;
+    glCanvas.height = 2160;
+    glCanvas.width = 3840;
 
     quadProgram = createProgramFromScripts(gl, ['quadVertexShader', 'quadFragmentShader']);
 
@@ -223,7 +223,7 @@ async function canvasSaveServer() {
 
 async function animationLoop() {
     let startZoom = 1.3;
-    let endZoom = 1300;
+    let endZoom = 5200;
     let startScale = 3;
     let alpha = 0.01;
 
