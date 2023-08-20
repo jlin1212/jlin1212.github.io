@@ -94,7 +94,10 @@
             geometry.setIndex(surface['indices']);
             geometry.setAttribute('position', new THREE.BufferAttribute(surface['vertices'], 3))
 
-            const wireframe_mat = new THREE.MeshPhongMaterial( { specular: 0x000000, flatShading: true, side: THREE.DoubleSide, wireframe: true } );
+            // const wireframe_mat = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+            const wireframe_mat = new THREE.MeshPhongMaterial( { specular: 0x000000, flatShading: false, side: THREE.DoubleSide, wireframe: true } );
+            wireframe_mat.reflectivity = 0;
+            wireframe_mat.shininess = 0;
             const solid_mat = new THREE.MeshPhongMaterial( { 
                 specular: 0x000000, 
                 flatShading: true, 
