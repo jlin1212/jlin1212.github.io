@@ -5,6 +5,8 @@
     <body>
         <center>
             <h2>jonathan lin #<span id="lindex" title="just a random number between 7000000000 and 12345, the two most important numbers on earth"></span></h2>
+
+            <h3>some neat tricks</h3>
             <h3>the best websites never have css (on the home page)</h3>
 
             <p>
@@ -18,10 +20,10 @@
                 </p>
             </p>
             <p>
-                <h4>Optimizer Sandbox - The Gradbowl!</h4>
+                <h4>Optimizer Sandbox - G R A D B O W L</h4>
                 <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
                     Define a 2D surface using a function of your choosing.
-                    Pick a starting point and <a href="gradbowl.html">watch how different optimizers behave in this landscape</a> with varying hyperparameters.
+                    Pick a starting point and <a href="gradbowl.html">watch how different optimizers behave in this landscape</a>.
                 </p>
             </p>
             <p>
@@ -39,5 +41,6 @@
     </body>
     <script>
         document.getElementById('lindex').innerHTML = Math.floor(Math.random() * 7000000000 + 12345);
+        document.querySelectorAll('h4').forEach((section, idx) => section.innerHTML = (idx + 1) + '. ' + section.innerHTML) // Cursed string arithmetic
     </script>
 </html>
