@@ -19,6 +19,35 @@
         <script type="module">
             import * as THREE from 'three';
 
+            const AMP = 10;
+            const RESOLUTION = 500;
+
+            function sampleSurface() {
+                let step = 2 * AMP / RESOLUTION;
+                let vertices = [];
+                let indices = [];
+
+                for (let x = -AMP; x < AMP; x += step) {
+                    for (let y = -AMP; y < AMP; y+= step) {
+                        let z = Math.exp(-(x**2 + y**2));
+                        vertices.push(x, y, z);
+                    }
+                }
+
+                for (let i = 0; i < RESOLUTION; i++) {
+                    for (let j = 0; j < RESOLUTION; j++) {
+                        let currVert = i + j * RESOLUTION;
+                        indices.push(currVert, currVert + 1, currVert + RESOLUTION);
+                        indices.push(currVert + 1, currVert + RESOLUTION + 1, currVert + RESOLUTION);
+                    }
+                }
+
+                return {
+                    'vertices': new Float32Array(vertices),
+                    'indices': indices
+                }
+            }
+
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
@@ -26,14 +55,18 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-            const material = new THREE.MeshPhongMaterial( { specular: 0x000000, flatShading: true, side: THREE.DoubleSide } );
-            const cube = new THREE.Mesh(geometry, material);
-            
-            cube.rotation.x = 45;
-            cube.rotation.y = 45;
+            let surface = sampleSurface();
 
-            scene.add(cube);
+            const geometry = new THREE.BufferGeometry();
+            geometry.setIndex(surface['indices']);
+            geometry.setAttribute('position', new THREE.BufferAttribute(surface['vertices'], 3))
+
+            const material = new THREE.MeshPhongMaterial( { specular: 0x000000, flatShading: true, side: THREE.DoubleSide } );
+            const landscape = new THREE.Mesh(geometry, material);
+
+            landscape.rotation.x = -90;
+
+            scene.add(landscape);
 
             const ambientLight = new THREE.AmbientLight( 0x7c7c7c, 0.5 );
 
@@ -43,6 +76,8 @@
             scene.add(ambientLight, light);
 
             camera.position.z = 5;
+            camera.position.y = 5;
+            camera.rotation.x = -45;
 
             renderer.render(scene, camera);
         </script>
