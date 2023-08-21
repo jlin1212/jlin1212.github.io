@@ -23,9 +23,25 @@
             const AMP = 1;
             const RESOLUTION = 50;
             const SCALE = 3;
+            const ENV_POINTS = [];
 
             const minColor = new THREE.Color(0x375e4d);
             const maxColor = new THREE.Color(0xc72020);
+
+            const raycaster = new THREE.Raycaster();
+            const pointer = new THREE.Vector2();
+
+            let currCast = null;
+
+            function onPointerMove( event ) {
+                pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+                pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            }
+
+            function onPointerDown( event ) {
+                if (currCast == null) return;
+                // TODO: Add env point to list
+            }
 
             function sampleSurface() {
                 let step = 2 * AMP / RESOLUTION;
@@ -109,9 +125,8 @@
 
             scene.add(ambientLight, light);
 
-            camera.position.z = 5;
-            camera.position.y = 5;
-            camera.rotation.x = -45;
+            camera.position.z = 0.3;
+            camera.position.y = 2.5;
 
             controls.update();
 
@@ -149,13 +164,39 @@
             solid.rotation.x = -90;
             scene.add(solid);
 
+            const castGeometry = new THREE.SphereGeometry(0.025);
+            const castMaterial = new THREE.MeshStandardMaterial({
+                flatShading: false,
+                color: 0xffbf00,
+                emissiveIntensity: 1,
+                emissive: 0xffbf00,
+                transparent: true
+            });
+            const castIndicator = new THREE.Mesh(castGeometry, castMaterial);
+            scene.add(castIndicator);
+
             function animate() {
                 requestAnimationFrame(animate);
+                raycaster.setFromCamera(pointer, camera);
+                const intersections = raycaster.intersectObject(solid);
+
+                if (intersections.length > 0) currCast = intersections[0].point;
+                else currCast = null;
+
                 controls.update();
+
+                if (currCast == null) castMaterial.opacity = 0;
+                else {
+                    castMaterial.opacity = 1;
+                    castIndicator.position.copy(currCast);
+                }
+
                 renderer.render(scene, camera);
             }
 
-            animate();
+            window.addEventListener( 'pointermove', onPointerMove );
+            window.addEventListener( 'pointerdown', onPointerDown );
+            requestAnimationFrame(animate);
         </script>
     </head>
     <body></body>
