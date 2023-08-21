@@ -40,6 +40,8 @@
 
             function onPointerDown( event ) {
                 if (currCast == null) return;
+                console.dir(event);
+                if (event.ctrlKey) alert('Added point.');
                 // TODO: Add env point to list
             }
 
@@ -106,8 +108,8 @@
             }
 
             const scene = new THREE.Scene();
-            // scene.background = new THREE.Color(0xc7efff);
-            scene.background = new THREE.Color(0xffffff);
+            scene.background = new THREE.Color(0xedfeff);
+            // scene.background = new THREE.Color(0xffffff);
             const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
             const renderer = new THREE.WebGLRenderer();
@@ -116,6 +118,7 @@
             document.body.appendChild(renderer.domElement);
 
             const controls = new OrbitControls(camera, renderer.domElement);
+            // controls.dampingFactor = 0.1;
             // controls.enableDamping = true;
 
             const ambientLight = new THREE.AmbientLight( 0xffffff, 0.6 );
@@ -155,6 +158,22 @@
                 polygonOffsetUnits: 1,
                 vertexColors: true
             } );
+
+            const GRID_SIZE = 3;
+
+            let x_plane = new THREE.GridHelper(GRID_SIZE, 10);
+            x_plane.rotation.x = Math.PI / 2;
+            x_plane.position.z = -GRID_SIZE / 2;
+            x_plane.position.y = GRID_SIZE / 2;
+
+            let y_plane = new THREE.GridHelper(GRID_SIZE, 10);
+            y_plane.rotation.z = Math.PI / 2;
+            y_plane.position.x = -GRID_SIZE / 2;
+            y_plane.position.y = GRID_SIZE / 2;
+
+            let z_plane = new THREE.GridHelper(GRID_SIZE, 10);
+
+            scene.add(x_plane, y_plane, z_plane);
             
             const wireframe = new THREE.Mesh(geometry, wireframe_mat);
             // wireframe.rotation.x = -90;
@@ -198,6 +217,68 @@
             window.addEventListener( 'pointerdown', onPointerDown );
             requestAnimationFrame(animate);
         </script>
+        <style>
+            #controls {
+                background-color: white;
+                border: 1px solid #aaa;
+                box-shadow: 0px 5px 4px rgba(0, 0, 0, 0.5);
+                display: inline-block;
+                padding: 20px;
+                margin: 10px;
+                position: absolute;
+                right: 0;
+            }
+
+            #eqn {
+                font-size: 20pt;
+                padding: 10px;
+            }
+
+            #eqn-prefix {
+                font-size: 20pt;
+                font-style: italic;
+                font-family: Georgia;
+                letter-spacing: 12px;
+            }
+
+            .help {
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+                font-size: 10pt;
+                margin-top: 10px;
+                user-select: none;
+            }
+
+            kbd {
+                margin: 0px 0.1em;
+                padding: 0.1em 0.6em;
+                border-radius: 3px;
+                border: 1px solid rgb(204, 204, 204);
+                color: rgb(51, 51, 51);
+                line-height: 1.4;
+                font-family: Arial,Helvetica,sans-serif;
+                display: inline-block;
+                box-shadow: 0px 1px 0px rgba(0,0,0,0.2), inset 0px 0px 0px 2px #ffffff;
+                background-color: rgb(247, 247, 247);
+                -moz-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #ffffff inset;
+                -webkit-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #ffffff inset;
+                -moz-border-radius: 3px;
+                -webkit-border-radius: 3px;
+                text-shadow: 0 1px 0 #fff;
+                user-select: none;
+            }
+
+            hr {
+                margin-top: 15px;
+            }
+        </style>
     </head>
-    <body></body>
+    <body>
+        <div id="controls">
+            <span id="eqn-prefix">z=</span><math-field id="eqn">0.1\sin(x^2+y^2)</math-field>
+            <div class="help">Press <kbd>Enter</kbd> to apply your equation.</div>
+            <hr />
+        </div>
+    </body>
+    <script src="https://unpkg.com/mathlive"></script>
 </html>
