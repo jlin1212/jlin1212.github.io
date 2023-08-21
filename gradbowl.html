@@ -27,7 +27,7 @@
             const TEX_FUNCS = [
                 ['Sinefield', `0.2\\sin(9x^2+9y^2)`],
                 ['Pitt Stop', `-e^{-5(x^2+y^2)}`],
-                ['Ackley', '-10e^{-0.2\\sqrt{0.5(x^2+y^2)}}-e^{0.5(\\cos(4\\pi x)+\\cos(4\\pi y))}+10+e']
+                ['Ackley', '-5e^{-0.1\\sqrt{0.5(x^2+y^2)}}-e^{0.5(\\cos(4\\pi x)+\\cos(4\\pi y))}+(5+e)']
             ];
 
             let funcMenu = document.getElementById('func-menu');
@@ -49,7 +49,7 @@
             const SCALE = 1;
             const EPS = 1e-8;
             const UPDATE_EPS = 1e-6;
-            const Y_OFFSET = new THREE.Vector3(0, 0.001, 0);
+            const Y_OFFSET = new THREE.Vector3(0, 0.005, 0);
 
             const ENV_PNTS = [];
             const ENV_OBJS = [];
@@ -291,9 +291,11 @@
                     }
                     obj.position.copy(newVec);
 
-                    // Store new loc in path vector
-                    pnt.path.push(newVec.clone().add(Y_OFFSET));
-                    pnt.line.setFromPoints(pnt.path);
+                    // Store new loc in path vector if path is not already too long
+                    if (pnt.path.length < 1e3) {
+                        pnt.path.push(newVec.clone().add(Y_OFFSET));
+                        pnt.line.setFromPoints(pnt.path);
+                    }
                 }
             }
 
