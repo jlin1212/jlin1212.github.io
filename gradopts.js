@@ -61,7 +61,7 @@ class Adagrad extends Optimizer {
 class Adam extends Optimizer {
     constructor() {
         super();
-        this.params.lr = 1e-3;
+        this.params.lr = 1e-2;
         this.params.beta1 = 0.9;
         this.params.beta2 = 0.999;
         this.params.gamma = 1e-8;
