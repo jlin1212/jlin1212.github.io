@@ -26,11 +26,11 @@
             const RESOLUTION = 50;
             const SCALE = 1;
             const EPS = 1e-8;
+            const Y_OFFSET = new THREE.Vector3(0, 0.001, 0);
 
             const ENV_PNTS = [];
             const ENV_OBJS = [];
             const ENV_LINES = [];
-            const Y_OFFSET = new THREE.Vector3(0, 0.01, 0);
 
             const minColor = new THREE.Color(0x375e4d);
             const maxColor = new THREE.Color(0xc72020);
@@ -92,7 +92,6 @@
                     scene.add(lineObj);
 
                     ENV_PNTS.push({
-                        pos: currCast,
                         optimizer: optimizer,
                         path: [],
                         line: lineGeometry
@@ -232,16 +231,16 @@
                     let line = ENV_LINES[i];
 
                     // Compute the gradient at each point
-                    ce.set({ x: pnt.pos.x + EPS, y: pnt.pos.y });
+                    ce.set({ x: obj.position.x + EPS, y: obj.position.y });
                     let z_plus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: pnt.pos.x - EPS, y: pnt.pos.y });
+                    ce.set({ x: obj.position.x - EPS, y: obj.position.y });
                     let z_minus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: pnt.pos.x, y: pnt.pos.y + EPS });
+                    ce.set({ x: obj.position.x, y: obj.position.y + EPS });
                     let z_plus_dy = currExpr.N().numericValue;
 
-                    ce.set({ x: pnt.pos.x, y: pnt.pos.y - EPS });
+                    ce.set({ x: obj.position.x, y: obj.position.y - EPS });
                     let z_minus_dy = currExpr.N().numericValue;
 
                     let grad_x = (z_plus_dx - z_minus_dx) / (2 * EPS);
@@ -249,7 +248,7 @@
                     let grad = new THREE.Vector2(grad_x, grad_y);
 
                     // Send position and gradient to optimizer
-                    let newPos = pnt.optimizer.apply(new THREE.Vector2(pnt.pos.x, pnt.pos.y), grad);
+                    let newPos = pnt.optimizer.apply(new THREE.Vector2(obj.position.x, obj.position.z), grad);
 
                     // Compute the Z height of the new location
                     ce.set({ x: newPos.x, y: newPos.y });
@@ -258,7 +257,6 @@
                     // Apply the new loc (Vector3)
                     let newVec = new THREE.Vector3(newPos.x, newZ, newPos.y);
                     obj.position.copy(newVec);
-                    pnt.pos.copy(newVec);
 
                     // Store new loc in path vector
                     pnt.path.push(newVec.clone().add(Y_OFFSET));
@@ -351,8 +349,10 @@
                     else {
                         console.dir(expr);
                         ENV_OBJS.forEach(obj => scene.remove(obj));
+                        ENV_LINES.forEach(line => scene.remove(line));
                         ENV_PNTS.length = 0;
                         ENV_OBJS.length = 0;
+                        ENV_LINES.length = 0;
                         exprToMesh(expr);
                     }
 
