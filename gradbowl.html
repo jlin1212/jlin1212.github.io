@@ -61,7 +61,7 @@
                         let z = 0.1 * Math.sin(x_scaled**2 + y_scaled**2);
                         // let z = 0;
 
-                        vertices.push(x, y, z);
+                        vertices.push(x, z, y);
 
                         if (z < zMin) zMin = z;
                         if (z > zMax) zMax = z;
@@ -70,7 +70,7 @@
 
                 for (let i = 0; i < vertices.length / 3; i++) {
                     if (zMin != zMax) {
-                        let zNormed = (vertices[3*i+2] - zMin) / (zMax - zMin);
+                        let zNormed = (vertices[3*i+1] - zMin) / (zMax - zMin);
                         console.dir(zNormed);
                         let lerpColor = minColor.clone().lerp(maxColor, zNormed);
                         colors.push(lerpColor.r, lerpColor.g, lerpColor.b);
@@ -157,11 +157,11 @@
             } );
             
             const wireframe = new THREE.Mesh(geometry, wireframe_mat);
-            wireframe.rotation.x = -90;
+            // wireframe.rotation.x = -90;
             scene.add(wireframe);
 
             const solid = new THREE.Mesh(geometry, solid_mat);
-            solid.rotation.x = -90;
+            // solid.rotation.x = -90;
             scene.add(solid);
 
             const castGeometry = new THREE.SphereGeometry(0.025);
