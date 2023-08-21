@@ -10,7 +10,7 @@ class VanillaSGD extends LandscapeOptimizer {
     }
 
     apply(pos, grad) {
-        return pos + this.lr * grad;
+        return pos.addScaledVector(grad, this.lr);
     }
 }
 

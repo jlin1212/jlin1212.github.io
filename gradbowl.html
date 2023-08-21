@@ -25,7 +25,9 @@
             const AMP = 1;
             const RESOLUTION = 50;
             const SCALE = 3;
-            const ENV_POINTS = [];
+            const EPS = 1e-8;
+
+            const ENV_PNTS = [];
             const ENV_OBJS = [];
 
             const minColor = new THREE.Color(0x375e4d);
@@ -80,7 +82,7 @@
                         optimizer[field.dataset['param']] = parseFloat(field.value.trim());
                     });
 
-                    ENV_POINTS.push({
+                    ENV_PNTS.push({
                         pos: currCast,
                         optimizer: optimizer
                     });
@@ -97,7 +99,7 @@
                     scene.add(pointSphere);
                     ENV_OBJS.push(pointSphere);
 
-                    console.dir(ENV_POINTS);
+                    console.dir(ENV_PNTS);
                     console.dir(ENV_OBJS);
                 }
             }
@@ -166,6 +168,8 @@
             }
 
             function exprToMesh(expr) {
+                currExpr = expr;
+
                 document.getElementById('loading').style.display = 'block';
 
                 let surface = sampleSurface(expr);
@@ -210,6 +214,40 @@
                 document.getElementById('loading').style.display = 'none';
             }
 
+            function updateOptPoints() {
+                for (let i = 0; i < ENV_OBJS.length; i++) {
+                    let pnt = ENV_PNTS[i];
+                    let obj = ENV_OBJS[i];
+
+                    // Compute the gradient at each point
+                    ce.set({ x: pnt.pos.x + EPS, y: pnt.pos.y });
+                    let z_plus_dx = currExpr.N().numericValue;
+
+                    ce.set({ x: pnt.pos.x - EPS, y: pnt.pos.y });
+                    let z_minus_dx = currExpr.N().numericValue;
+
+                    ce.set({ x: pnt.pos.x, y: pnt.pos.y + EPS });
+                    let z_plus_dy = currExpr.N().numericValue;
+
+                    ce.set({ x: pnt.pos.x, y: pnt.pos.y - EPS });
+                    let z_minus_dy = currExpr.N().numericValue;
+
+                    let grad_x = (z_plus_dx - z_minus_dx) / (2 * EPS);
+                    let grad_y = (z_plus_dy - z_minus_dy) / (2 * EPS);
+                    let grad = new THREE.Vector2(grad_x, grad_y);
+
+                    // Send position and gradient to optimizer
+                    let newPos = pnt.optimizer.apply(new THREE.Vector2(pnt.pos.x, pnt.pos.y), grad);
+
+                    // Compute the Z height of the new location
+                    ce.set({ x: newPos.x, y: newPos.y });
+                    let newZ = currExpr.N().numericValue;
+
+                    // Apply the new loc (Vector3)
+                    obj.position.copy(new THREE.Vector3(newPos.x, newZ, newPos.y));
+                }
+            }
+
             const ambientLight = new THREE.AmbientLight( 0xffffff, 0.6 );
 
             const light = new THREE.DirectionalLight( 0xf2fbff, 1.3 );
@@ -249,7 +287,13 @@
             const castIndicator = new THREE.Mesh(castGeometry, castMaterial);
             scene.add(castIndicator);
 
-            function animate() {
+            let lastGradUpdate = null;
+
+            function animate(time) {
+                let timeElapsed = -1;
+                if (lastGradUpdate === null) lastGradUpdate = time;
+                else timeElapsed = time - lastGradUpdate;
+
                 if (currMeshSolid != null) {
                     raycaster.setFromCamera(pointer, camera);
                     const intersections = raycaster.intersectObject(currMeshSolid);
@@ -266,6 +310,11 @@
                     castMaterial.opacity = 0;
                 }
 
+                if (timeElapsed > 1000) {
+                    lastGradUpdate = time;
+                    updateOptPoints();
+                }
+
                 controls.update();
                 renderer.render(scene, camera);
 
@@ -277,7 +326,6 @@
             mfield.addEventListener('beforeinput', evt => {
                 if (evt.inputType == 'insertLineBreak') {
                     let expr = ce.parse(mfield.getValue('latex'));
-                    currExpr = expr;
 
                     let freeVars = expr.freeVars;
 
@@ -288,7 +336,7 @@
                     else {
                         console.dir(expr);
                         ENV_OBJS.forEach(obj => scene.remove(obj));
-                        ENV_POINTS.length = 0;
+                        ENV_PNTS.length = 0;
                         ENV_OBJS.length = 0;
                         exprToMesh(expr);
                     }
@@ -316,13 +364,16 @@
                 Object.getOwnPropertyNames(inst).forEach(paramName => {
                     let paramDiv = document.createElement('div');
                     paramDiv.className = 'param-div';
+
                     let paramLabel = document.createElement('label');
                     paramLabel.innerHTML = `${paramName}:`;
                     paramDiv.appendChild(paramLabel);
+
                     let paramInput = document.createElement('input');
                     paramInput.placeholder = paramName;
                     paramInput.dataset['param'] = paramName;
                     paramInput.value = inst[paramName];
+
                     paramDiv.appendChild(paramInput);
                     document.getElementById('params').appendChild(paramDiv);
                 });
