@@ -26,6 +26,7 @@
             const RESOLUTION = 50;
             const SCALE = 1;
             const EPS = 1e-8;
+            const UPDATE_EPS = 1e-6;
             const Y_OFFSET = new THREE.Vector3(0, 0.001, 0);
 
             const ENV_PNTS = [];
@@ -231,6 +232,11 @@
                     let obj = ENV_OBJS[i];
                     let line = ENV_LINES[i];
 
+                    if (!pnt.update) {
+                        // console.log(`Skipping envpnt ${i} as update == false.`);
+                        continue;
+                    }
+
                     // Compute the gradient at each point
                     ce.set({ x: obj.position.x + EPS, y: obj.position.z });
                     let z_plus_dx = currExpr.N().numericValue;
@@ -257,6 +263,10 @@
 
                     // Apply the new loc (Vector3)
                     let newVec = new THREE.Vector3(newPos.x, newZ, newPos.y);
+                    if (obj.position.distanceToSquared(newVec) < UPDATE_EPS * UPDATE_EPS) {
+                        console.log(`update = false for envpnt ${i}.`);
+                        ENV_PNTS[i].update = false;
+                    }
                     obj.position.copy(newVec);
 
                     // Store new loc in path vector
