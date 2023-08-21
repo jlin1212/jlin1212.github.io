@@ -231,16 +231,16 @@
                     let line = ENV_LINES[i];
 
                     // Compute the gradient at each point
-                    ce.set({ x: obj.position.x + EPS, y: obj.position.y });
+                    ce.set({ x: obj.position.x + EPS, y: obj.position.z });
                     let z_plus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x - EPS, y: obj.position.y });
+                    ce.set({ x: obj.position.x - EPS, y: obj.position.z });
                     let z_minus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x, y: obj.position.y + EPS });
+                    ce.set({ x: obj.position.x, y: obj.position.z + EPS });
                     let z_plus_dy = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x, y: obj.position.y - EPS });
+                    ce.set({ x: obj.position.x, y: obj.position.z - EPS });
                     let z_minus_dy = currExpr.N().numericValue;
 
                     let grad_x = (z_plus_dx - z_minus_dx) / (2 * EPS);
