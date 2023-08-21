@@ -36,6 +36,9 @@
             let currMeshSolid = null;
             let currMeshWire = null;
 
+            let mfield = document.getElementById('eqn');
+            let ce = new ComputeEngine.ComputeEngine();
+
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0xedfeff);
             const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -74,8 +77,10 @@
                         let x_scaled = SCALE * x;
                         let y_scaled = SCALE * y;
 
-                        let z = 0.1 * Math.sin(x_scaled**2 + y_scaled**2);
-                        // let z = 0;
+                        ce.set({ x: x_scaled, y: y_scaled });
+
+                        let z = expr.N().valueOf();
+                        // let z = 0.1 * Math.sin(x_scaled**2 + y_scaled**2);
 
                         vertices.push(x, z, y);
 
@@ -227,8 +232,7 @@
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
 
-            let mfield = document.getElementById('eqn');
-            let ce = new ComputeEngine.ComputeEngine();
+            exprToMesh(ce.parse(mfield.getValue('latex')));
 
             mfield.addEventListener('beforeinput', evt => {
                 if (evt.inputType == 'insertLineBreak') {
@@ -238,7 +242,8 @@
                     extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
                     if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
                     else {
-                        
+                        console.dir(expr);
+                        exprToMesh(expr);
                     }
                     evt.preventDefault();
                 }
