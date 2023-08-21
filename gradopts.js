@@ -58,4 +58,41 @@ class Adagrad extends Optimizer {
     }
 }
 
-OPTIMIZERS = [VanillaSGD, Momentum, Adagrad];
+class Adam extends Optimizer {
+    constructor() {
+        super();
+        this.params.lr = 1e-3;
+        this.params.beta1 = 0.9;
+        this.params.beta2 = 0.999;
+        this.params.gamma = 1e-8;
+
+        this.m = math.zeros(2);
+        this.v = math.zeros(2);
+        this.step = 0
+    }
+
+    apply(pos, grad) {
+        this.step = this.step + 1;
+
+        this.m = math.add(
+            math.multiply(this.params.beta1, this.m),
+            math.multiply(1 - this.params.beta1, grad)
+        );
+        this.v = math.add(
+            math.multiply(this.params.beta2, this.v),
+            math.multiply(1 - this.params.beta2, math.map(grad, math.square))
+        );
+
+        let mhat = math.divide(this.m, 1 - math.pow(this.params.beta1, this.step));
+        let vhat = math.divide(this.v, 1 - math.pow(this.params.beta2, this.step));
+
+        let update = math.multiply(
+            -this.params.lr,
+            math.dotDivide(mhat, math.add(math.map(vhat, math.sqrt), this.params.gamma))
+        )
+
+        return math.add(pos, update);
+    }
+}
+
+OPTIMIZERS = [VanillaSGD, Momentum, Adagrad, Adam];
