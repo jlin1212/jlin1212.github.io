@@ -71,7 +71,7 @@
                     let fields = [...document.querySelectorAll('#params input')];
 
                     err = fields.some(field => {
-                        return field.value.trim().length === 0 || !/\d+\.?(e-?)?\d*/.test(field.value.trim());
+                        return field.value.trim().length === 0 || !/^\d+\.?(e-?)?\d*$/.test(field.value.trim());
                     });
 
                     if (err) {
@@ -507,7 +507,7 @@
     </head>
     <body>
         <div id="controls">
-            <span id="eqn-prefix">z=</span><math-field id="eqn">0.1\sin(9x^2+9y^2)</math-field>
+            <span id="eqn-prefix">z=</span><math-field id="eqn">0.2\sin(9x^2+9y^2)</math-field>
             <div class="help">Press <kbd>Enter</kbd> to apply your equation.</div>
             <div class="help">The function is only of <i>x</i> and <i>y</i>.</div>
             <hr />

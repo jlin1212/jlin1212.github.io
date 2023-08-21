@@ -8,7 +8,7 @@ class LandscapeOptimizer {
 class VanillaSGD extends LandscapeOptimizer {
     constructor() {
         super();
-        this.params.lr = 1e-3;
+        this.params.lr = 1e-2;
     }
 
     apply(pos, grad) {
@@ -20,7 +20,7 @@ class VanillaSGD extends LandscapeOptimizer {
 class Momentum extends LandscapeOptimizer {
     constructor() {
         super();
-        this.params.lr = 1e-3;
+        this.params.lr = 1e-2;
         this.params.beta = 0.8;
         this.last_grad = null;
     }
