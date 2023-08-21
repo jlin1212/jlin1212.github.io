@@ -409,6 +409,10 @@
             exprToMesh(ce.parse(mfield.getValue('latex')));
 
             requestAnimationFrame(animate);
+
+            document.getElementById('control-rotate').addEventListener('change', evt => {
+                controls.autoRotate = evt.target.checked;
+            });
         </script>
         <style>
             #controls {
@@ -420,6 +424,8 @@
                 margin: 10px;
                 position: absolute;
                 right: 0;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 9pt;
             }
 
             #eqn {
@@ -503,6 +509,10 @@
                 border-bottom: 2px solid rgb(52, 52, 219);
                 outline: 0;
             }
+
+            .control {
+                margin-top: 10px;
+            }
         </style>
     </head>
     <body>
@@ -518,7 +528,9 @@
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
             <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan.</div>
             <hr />
-
+            <div class="control">
+                <input id="control-rotate" type="checkbox" /> Auto-Rotate
+            </div>
         </div>
         <div id="loading">Loading...</div>
     </body>
