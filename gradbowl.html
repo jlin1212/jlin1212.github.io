@@ -79,7 +79,7 @@
                     let optimizer = new OPTIMIZERS[document.getElementById('opt-menu').selectedIndex]();
 
                     fields.forEach(field => {
-                        optimizer[field.dataset['param']] = parseFloat(field.value.trim());
+                        optimizer['params'][field.dataset['param']] = parseFloat(field.value.trim());
                     });
 
                     ENV_PNTS.push({
@@ -238,14 +238,15 @@
 
                     // Send position and gradient to optimizer
                     let newPos = pnt.optimizer.apply(new THREE.Vector2(pnt.pos.x, pnt.pos.y), grad);
-                    pnt.pos = newPos;
 
                     // Compute the Z height of the new location
                     ce.set({ x: newPos.x, y: newPos.y });
                     let newZ = currExpr.N().numericValue;
 
                     // Apply the new loc (Vector3)
-                    obj.position.copy(new THREE.Vector3(newPos.x, newZ, newPos.y));
+                    let newVec = new THREE.Vector3(newPos.x, newZ, newPos.y);
+                    obj.position.copy(newVec);
+                    pnt.pos.copy(newVec);
                 }
             }
 
@@ -311,10 +312,7 @@
                     castMaterial.opacity = 0;
                 }
 
-                if (timeElapsed > 1000) {
-                    lastGradUpdate = time;
-                    updateOptPoints();
-                }
+                updateOptPoints();
 
                 controls.update();
                 renderer.render(scene, camera);
@@ -362,7 +360,7 @@
             function populateParams(idx) {
                 document.getElementById('params').innerHTML = '';
                 let inst = new OPTIMIZERS[idx]();
-                Object.getOwnPropertyNames(inst).forEach(paramName => {
+                Object.getOwnPropertyNames(inst.params).forEach(paramName => {
                     let paramDiv = document.createElement('div');
                     paramDiv.className = 'param-div';
 
@@ -373,7 +371,7 @@
                     let paramInput = document.createElement('input');
                     paramInput.placeholder = paramName;
                     paramInput.dataset['param'] = paramName;
-                    paramInput.value = inst[paramName];
+                    paramInput.value = inst['params'][paramName];
 
                     paramDiv.appendChild(paramInput);
                     document.getElementById('params').appendChild(paramDiv);
