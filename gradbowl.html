@@ -9,6 +9,7 @@
         </style>
         <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
         <script src="https://unpkg.com/@cortex-js/compute-engine"></script>
+        <script src="gradopts.js" type="text/javascript"></script>
         <script type="importmap">
             {
                 "imports": {
@@ -59,8 +60,27 @@
             function onPointerDown( event ) {
                 if (currCast == null) return;
                 console.dir(event);
-                if (event.ctrlKey) alert('Added point.');
-                // TODO: Add env point to list
+                if (event.ctrlKey) {
+                    let err = false;
+                    let fields = [...document.querySelectorAll('#params input')];
+
+                    err = fields.some(field => {
+                        return field.value.trim().length === 0 || !/\d+\.?(e-?)?\d*/.test(field.value.trim());
+                    });
+
+                    if (err) {
+                        alert('Make sure all hyperparameters are not blank and are numeric.');
+                        return;
+                    }
+
+                    let optimizer = new OPTIMIZERS[document.getElementById('opt-menu').selectedIndex]();
+
+                    ENV_POINTS.push({
+                        pos: pointer,
+                        optimizer: new VanillaSGD(1e-3)
+                    });
+                    console.dir(ENV_POINTS);
+                }
             }
 
             function sampleSurface(expr) {
@@ -252,6 +272,38 @@
                 }
             });
 
+            let optMenu = document.getElementById('opt-menu');
+
+            OPTIMIZERS.forEach((opt, idx) => {
+                let option = document.createElement('option');
+                option.value = idx;
+                option.innerHTML = opt.name;
+                optMenu.appendChild(option);
+            });
+
+            optMenu.addEventListener('change', (event) => {
+                populateParams(event.target.selectedIndex);
+            });
+
+            function populateParams(idx) {
+                document.getElementById('params').innerHTML = '';
+                let inst = new OPTIMIZERS[idx]();
+                Object.getOwnPropertyNames(inst).forEach(paramName => {
+                    let paramDiv = document.createElement('div');
+                    paramDiv.className = 'param-div';
+                    let paramLabel = document.createElement('label');
+                    paramLabel.innerHTML = `${paramName}:`;
+                    paramDiv.appendChild(paramLabel);
+                    let paramInput = document.createElement('input');
+                    paramInput.placeholder = paramName;
+                    paramInput.dataset['param'] = paramName;
+                    paramInput.value = inst[paramName];
+                    paramDiv.appendChild(paramInput);
+                    document.getElementById('params').appendChild(paramDiv);
+                });
+            }
+
+            populateParams(0);
             exprToMesh(ce.parse(mfield.getValue('latex')));
 
             requestAnimationFrame(animate);
@@ -323,6 +375,32 @@
                 z-index: 10000;
                 text-shadow: 0px 2px 0px black;
             }
+
+            #opt-menu {
+                background-color: white;
+                border: 1px solid gray;
+                padding: 10px;
+                margin-top: 15px;
+                font-size: 12pt;
+            }
+
+            .param-div {
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+
+            .param-div label {
+                display: block;
+            }
+
+            .param-div input {
+                padding: 5px;
+                font-size: 10pt;
+                border: none;
+                border-bottom: 2px solid rgb(52, 52, 219);
+                outline: 0;
+            }
         </style>
     </head>
     <body>
@@ -331,6 +409,11 @@
             <div class="help">Press <kbd>Enter</kbd> to apply your equation.</div>
             <div class="help">The function is only of <i>x</i> and <i>y</i>.</div>
             <hr />
+            <select id="opt-menu">
+            </select>
+            <div id="params"></div>
+            <hr />
+            <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
         </div>
         <div id="loading">Loading...</div>
     </body>
