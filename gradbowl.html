@@ -29,6 +29,8 @@
 
             const ENV_PNTS = [];
             const ENV_OBJS = [];
+            const ENV_LINES = [];
+            const Y_OFFSET = new THREE.Vector3(0, 0.01, 0);
 
             const minColor = new THREE.Color(0x375e4d);
             const maxColor = new THREE.Color(0xc72020);
@@ -82,9 +84,18 @@
                         optimizer['params'][field.dataset['param']] = parseFloat(field.value.trim());
                     });
 
+                    const lineGeometry = new THREE.BufferGeometry();
+                    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffc412 });
+                    const lineObj = new THREE.Line(lineGeometry, lineMaterial);
+
+                    ENV_LINES.push(lineObj);
+                    scene.add(lineObj);
+
                     ENV_PNTS.push({
                         pos: currCast,
-                        optimizer: optimizer
+                        optimizer: optimizer,
+                        path: [],
+                        line: lineGeometry
                     });
 
                     const pointGeometry = new THREE.SphereGeometry(0.025);
@@ -99,8 +110,8 @@
                     scene.add(pointSphere);
                     ENV_OBJS.push(pointSphere);
 
-                    console.dir(ENV_PNTS);
-                    console.dir(ENV_OBJS);
+                    // console.dir(ENV_PNTS);
+                    // console.dir(ENV_OBJS);
                 }
             }
 
@@ -218,6 +229,7 @@
                 for (let i = 0; i < ENV_OBJS.length; i++) {
                     let pnt = ENV_PNTS[i];
                     let obj = ENV_OBJS[i];
+                    let line = ENV_LINES[i];
 
                     // Compute the gradient at each point
                     ce.set({ x: pnt.pos.x + EPS, y: pnt.pos.y });
@@ -247,6 +259,10 @@
                     let newVec = new THREE.Vector3(newPos.x, newZ, newPos.y);
                     obj.position.copy(newVec);
                     pnt.pos.copy(newVec);
+
+                    // Store new loc in path vector
+                    pnt.path.push(newVec.clone().add(Y_OFFSET));
+                    pnt.line.setFromPoints(pnt.path);
                 }
             }
 
@@ -490,6 +506,8 @@
             <hr />
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
             <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan.</div>
+            <hr />
+
         </div>
         <div id="loading">Loading...</div>
     </body>
