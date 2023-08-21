@@ -217,12 +217,22 @@
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
 
-            document.getElementById('eqn').addEventListener('beforeinput', evt => {
+            let mfield = document.getElementById('eqn');
+            let ce = new ComputeEngine.ComputeEngine();
+
+            mfield.addEventListener('beforeinput', evt => {
                 if (evt.inputType == 'insertLineBreak') {
-                    alert('Applied equation!');
+                    let expr = ce.parse(mfield.getValue('latex'));
+                    let freeVars = expr.freeVars;
+                    let extraVars = freeVars.toSpliced(freeVars.indexOf('x'), 1);
+                    extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
+                    if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
+                    else {
+                        alert('valid expression.');
+                    }
                     evt.preventDefault();
                 }
-            })
+            });
 
             requestAnimationFrame(animate);
         </script>
