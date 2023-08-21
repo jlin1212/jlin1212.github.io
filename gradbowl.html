@@ -8,6 +8,7 @@
             }
         </style>
         <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+        <script src="https://unpkg.com/@cortex-js/compute-engine"></script>
         <script type="importmap">
             {
                 "imports": {
@@ -161,26 +162,26 @@
 
             const GRID_SIZE = 3;
 
-            let x_plane = new THREE.GridHelper(GRID_SIZE, 10);
+            let x_plane = new THREE.GridHelper(GRID_SIZE, 10, 0x222222, 0xbbbbbb);
             x_plane.rotation.x = Math.PI / 2;
             x_plane.position.z = -GRID_SIZE / 2;
             x_plane.position.y = GRID_SIZE / 2;
 
-            let y_plane = new THREE.GridHelper(GRID_SIZE, 10);
+            let y_plane = new THREE.GridHelper(GRID_SIZE, 10, 0x222222, 0xbbbbbb);
             y_plane.rotation.z = Math.PI / 2;
             y_plane.position.x = -GRID_SIZE / 2;
             y_plane.position.y = GRID_SIZE / 2;
 
-            let z_plane = new THREE.GridHelper(GRID_SIZE, 10);
+            let z_plane = new THREE.GridHelper(GRID_SIZE, 10, 0x222222, 0xbbbbbb);
 
             scene.add(x_plane, y_plane, z_plane);
             
             const wireframe = new THREE.Mesh(geometry, wireframe_mat);
-            // wireframe.rotation.x = -90;
+            wireframe.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
             scene.add(wireframe);
 
             const solid = new THREE.Mesh(geometry, solid_mat);
-            // solid.rotation.x = -90;
+            solid.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
             scene.add(solid);
 
             const castGeometry = new THREE.SphereGeometry(0.025);
@@ -215,6 +216,14 @@
 
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
+
+            document.getElementById('eqn').addEventListener('beforeinput', evt => {
+                if (evt.inputType == 'insertLineBreak') {
+                    alert('Applied equation!');
+                    evt.preventDefault();
+                }
+            })
+
             requestAnimationFrame(animate);
         </script>
         <style>
@@ -277,6 +286,7 @@
         <div id="controls">
             <span id="eqn-prefix">z=</span><math-field id="eqn">0.1\sin(x^2+y^2)</math-field>
             <div class="help">Press <kbd>Enter</kbd> to apply your equation.</div>
+            <div class="help">The function is only of <i>x</i> and <i>y</i>.</div>
             <hr />
         </div>
     </body>
