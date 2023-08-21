@@ -391,12 +391,13 @@
                     ENV_LINES.length = 0;
                     exprToMesh(expr);
                 }
-
-                evt.preventDefault();
             }
 
             mfield.addEventListener('beforeinput', evt => {
-                if (evt.inputType == 'insertLineBreak') handleExprInput();
+                if (evt.inputType == 'insertLineBreak') {
+                    handleExprInput();
+                    evt.preventDefault();
+                }
             });
 
             let optMenu = document.getElementById('opt-menu');
