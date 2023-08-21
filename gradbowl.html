@@ -26,6 +26,7 @@
             const RESOLUTION = 50;
             const SCALE = 3;
             const ENV_POINTS = [];
+            const ENV_OBJS = [];
 
             const minColor = new THREE.Color(0x375e4d);
             const maxColor = new THREE.Color(0xc72020);
@@ -59,7 +60,7 @@
 
             function onPointerDown( event ) {
                 if (currCast == null) return;
-                console.dir(event);
+                // console.dir(event);
                 if (event.ctrlKey) {
                     let err = false;
                     let fields = [...document.querySelectorAll('#params input')];
@@ -75,11 +76,29 @@
 
                     let optimizer = new OPTIMIZERS[document.getElementById('opt-menu').selectedIndex]();
 
-                    ENV_POINTS.push({
-                        pos: pointer,
-                        optimizer: new VanillaSGD(1e-3)
+                    fields.forEach(field => {
+                        optimizer[field.dataset['param']] = parseFloat(field.value.trim());
                     });
+
+                    ENV_POINTS.push({
+                        pos: currCast,
+                        optimizer: optimizer
+                    });
+
+                    const pointGeometry = new THREE.SphereGeometry(0.025);
+                    const pointMaterial = new THREE.MeshStandardMaterial({
+                        flatShading: true,
+                        color: 0xfc8c03,
+                        emissiveIntensity: 0.0,
+                        emissive: 0xfc8c03
+                    });
+                    const pointSphere = new THREE.Mesh(pointGeometry, pointMaterial);
+                    pointSphere.position.copy(currCast);
+                    scene.add(pointSphere);
+                    ENV_OBJS.push(pointSphere);
+
                     console.dir(ENV_POINTS);
+                    console.dir(ENV_OBJS);
                 }
             }
 
@@ -255,19 +274,25 @@
 
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
-
             mfield.addEventListener('beforeinput', evt => {
                 if (evt.inputType == 'insertLineBreak') {
                     let expr = ce.parse(mfield.getValue('latex'));
                     currExpr = expr;
+
                     let freeVars = expr.freeVars;
+
                     let extraVars = freeVars.toSpliced(freeVars.indexOf('x'), 1);
                     extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
+
                     if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
                     else {
                         console.dir(expr);
+                        ENV_OBJS.forEach(obj => scene.remove(obj));
+                        ENV_POINTS.length = 0;
+                        ENV_OBJS.length = 0;
                         exprToMesh(expr);
                     }
+
                     evt.preventDefault();
                 }
             });
@@ -414,6 +439,7 @@
             <div id="params"></div>
             <hr />
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
+            <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan.</div>
         </div>
         <div id="loading">Loading...</div>
     </body>
