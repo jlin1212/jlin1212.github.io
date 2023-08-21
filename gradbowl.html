@@ -28,7 +28,8 @@
             const TEX_FUNCS = [
                 ['Sinefield', `0.2\\sin(9x^2+9y^2)`],
                 ['Pitt Stop', `-e^{-5(x^2+y^2)}`],
-                ['Ackley', '-5e^{-0.1\\sqrt{0.5(x^2+y^2)}}-e^{0.5(\\cos(4\\pi x)+\\cos(4\\pi y))}+(5+e)']
+                ['Ackley', '-5e^{-0.1\\sqrt{0.5(x^2+y^2)}}-e^{0.5(\\cos(4\\pi x)+\\cos(4\\pi y))}+(5+e)'],
+                ['Bukin', '\\sqrt{\\left|25y-5x^2\\right|}+0.01\\left|x+10\\right|']
             ];
 
             let funcMenu = document.getElementById('func-menu');
@@ -56,7 +57,8 @@
             const ENV_OBJS = [];
             const ENV_LINES = [];
 
-            const minColor = new THREE.Color(0x375e4d);
+            // const minColor = new THREE.Color(0x375e4d);
+            const minColor = new THREE.Color(0x000b61);
             const maxColor = new THREE.Color(0xc72020);
 
             const raycaster = new THREE.Raycaster();
