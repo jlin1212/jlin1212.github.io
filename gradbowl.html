@@ -9,6 +9,7 @@
         </style>
         <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
         <script src="https://unpkg.com/@cortex-js/compute-engine"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.1/math.min.js"></script>
         <script src="gradopts.js" type="text/javascript"></script>
         <script type="importmap">
             {
@@ -274,17 +275,17 @@
 
                     let grad_x = (z_plus_dx - z_minus_dx) / (2 * EPS);
                     let grad_y = (z_plus_dy - z_minus_dy) / (2 * EPS);
-                    let grad = new THREE.Vector2(grad_x, grad_y);
+                    let grad = math.matrix([grad_x, grad_y]);
 
                     // Send position and gradient to optimizer
-                    let newPos = pnt.optimizer.apply(new THREE.Vector2(obj.position.x, obj.position.z), grad);
+                    let newPos = pnt.optimizer.apply(math.matrix([obj.position.x, obj.position.z]), grad);
 
                     // Compute the Z height of the new location
-                    ce.set({ x: newPos.x, y: newPos.y });
+                    ce.set({ x: newPos.get([0]), y: newPos.get([1]) });
                     let newZ = currExpr.N().numericValue;
 
                     // Apply the new loc (Vector3)
-                    let newVec = new THREE.Vector3(newPos.x, newZ, newPos.y);
+                    let newVec = new THREE.Vector3(newPos.get([0]), newZ, newPos.get([1]));
                     if (obj.position.distanceToSquared(newVec) < UPDATE_EPS * UPDATE_EPS) {
                         console.log(`update = false for envpnt ${i}.`);
                         ENV_PNTS[i].update = false;

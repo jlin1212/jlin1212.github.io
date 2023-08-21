@@ -12,8 +12,7 @@ class VanillaSGD extends LandscapeOptimizer {
     }
 
     apply(pos, grad) {
-        return pos.addScaledVector(grad, -this.params.lr);
-        // return pos;
+        return math.add(pos, math.multiply(-this.params.lr, grad));
     }
 }
 
@@ -21,16 +20,22 @@ class Momentum extends LandscapeOptimizer {
     constructor() {
         super();
         this.params.lr = 1e-2;
-        this.params.beta = 0.8;
+        this.params.beta = 0.96;
         this.last_grad = null;
     }
 
     apply(pos, grad) {
-        let next_grad = null;
-        if (this.momentum_grad == null) next_grad = grad;
-        else next_grad = this.last_grad.lerp(grad, this.params.beta);
-        this.last_grad = next_grad;
-        return pos.addScaledVector(next_grad, -this.params.lr);
+        if (this.last_grad == null) {
+            this.last_grad = grad;
+            return math.add(pos, math.multiply(-this.params.lr, grad));
+        } else {
+            let momentum = math.add(
+                math.multiply(this.params.beta, this.last_grad),
+                math.multiply(1 - this.params.beta, grad)
+            );
+            this.last_grad = momentum;
+            return math.add(pos, math.multiply(-this.params.lr, momentum));
+        }
     }
 }
 
