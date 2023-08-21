@@ -22,6 +22,27 @@
             import * as THREE from 'three';
             import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+            // Some predefined LaTeX for lazy people
+
+            const TEX_FUNCS = [
+                ['Sinefield', `0.2\\sin(9x^2+9y^2)`],
+                ['Pitt Stop', `-e^{-5(x^2+y^2)}`]
+            ];
+
+            let funcMenu = document.getElementById('func-menu');
+            TEX_FUNCS.forEach((texFunc, idx) => {
+                let optionNode = document.createElement('option');
+                optionNode.innerText = texFunc[0];
+                funcMenu.appendChild(optionNode);
+            });
+
+            funcMenu.addEventListener('change', evt => {
+                mfield.setValue(TEX_FUNCS[evt.target.selectedIndex][1]);
+                handleExprInput();
+            });
+
+            // Rendering code
+
             const AMP = 1;
             const RESOLUTION = 50;
             const SCALE = 1;
@@ -347,28 +368,31 @@
 
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
-            mfield.addEventListener('beforeinput', evt => {
-                if (evt.inputType == 'insertLineBreak') {
-                    let expr = ce.parse(mfield.getValue('latex'));
 
-                    let freeVars = expr.freeVars;
+            function handleExprInput() {
+                let expr = ce.parse(mfield.getValue('latex'));
 
-                    let extraVars = freeVars.toSpliced(freeVars.indexOf('x'), 1);
-                    extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
+                let freeVars = expr.freeVars;
 
-                    if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
-                    else {
-                        console.dir(expr);
-                        ENV_OBJS.forEach(obj => scene.remove(obj));
-                        ENV_LINES.forEach(line => scene.remove(line));
-                        ENV_PNTS.length = 0;
-                        ENV_OBJS.length = 0;
-                        ENV_LINES.length = 0;
-                        exprToMesh(expr);
-                    }
+                let extraVars = freeVars.toSpliced(freeVars.indexOf('x'), 1);
+                extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
 
-                    evt.preventDefault();
+                if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
+                else {
+                    console.dir(expr);
+                    ENV_OBJS.forEach(obj => scene.remove(obj));
+                    ENV_LINES.forEach(line => scene.remove(line));
+                    ENV_PNTS.length = 0;
+                    ENV_OBJS.length = 0;
+                    ENV_LINES.length = 0;
+                    exprToMesh(expr);
                 }
+
+                evt.preventDefault();
+            }
+
+            mfield.addEventListener('beforeinput', evt => {
+                if (evt.inputType == 'insertLineBreak') handleExprInput();
             });
 
             let optMenu = document.getElementById('opt-menu');
@@ -484,7 +508,7 @@
                 text-shadow: 0px 2px 0px black;
             }
 
-            #opt-menu {
+            select {
                 background-color: white;
                 border: 1px solid gray;
                 padding: 10px;
@@ -520,9 +544,9 @@
             <span id="eqn-prefix">z=</span><math-field id="eqn">0.2\sin(9x^2+9y^2)</math-field>
             <div class="help">Press <kbd>Enter</kbd> to apply your equation.</div>
             <div class="help">The function is only of <i>x</i> and <i>y</i>.</div>
+            <select id="func-menu"></select>
             <hr />
-            <select id="opt-menu">
-            </select>
+            <select id="opt-menu"></select>
             <div id="params"></div>
             <hr />
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
