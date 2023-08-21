@@ -33,6 +33,19 @@
             const pointer = new THREE.Vector2();
 
             let currCast = null;
+            let currMeshSolid = null;
+            let currMeshWire = null;
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xedfeff);
+            const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+            const renderer = new THREE.WebGLRenderer();
+            renderer.antialias = true;
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
 
             function onPointerMove( event ) {
                 pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -46,7 +59,7 @@
                 // TODO: Add env point to list
             }
 
-            function sampleSurface() {
+            function sampleSurface(expr) {
                 let step = 2 * AMP / RESOLUTION;
 
                 let colors = []
@@ -108,19 +121,46 @@
                 }
             }
 
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xedfeff);
-            // scene.background = new THREE.Color(0xffffff);
-            const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            function exprToMesh(expr) {
+                let surface = sampleSurface(expr);
 
-            const renderer = new THREE.WebGLRenderer();
-            renderer.antialias = true;
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+                const geometry = new THREE.BufferGeometry();
+                geometry.setIndex(surface['indices']);
+                geometry.setAttribute('color', new THREE.BufferAttribute(surface['colors'], 3))
+                geometry.setAttribute('position', new THREE.BufferAttribute(surface['vertices'], 3))
 
-            const controls = new OrbitControls(camera, renderer.domElement);
-            // controls.dampingFactor = 0.1;
-            // controls.enableDamping = true;
+                // const wireframe_mat = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+                const wireframe_mat = new THREE.MeshBasicMaterial({
+                    color: "black",
+                    wireframe: true,
+                    transparent: false,
+                    opacity: 0.25
+                });
+                wireframe_mat.opacity = 0;
+                const solid_mat = new THREE.MeshPhongMaterial( {
+                    flatShading: true,
+                    emissive: new THREE.Color(0xffffff),
+                    emissiveIntensity: 0.1,
+                    side: THREE.DoubleSide,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1,
+                    vertexColors: true
+                } );
+
+                if (currMeshSolid != null) scene.remove(currMeshSolid);
+                if (currMeshWire != null) scene.remove(currMeshWire);
+
+                const wireframe = new THREE.Mesh(geometry, wireframe_mat);
+                wireframe.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
+                currMeshWire = wireframe;
+                scene.add(wireframe);
+
+                const solid = new THREE.Mesh(geometry, solid_mat);
+                solid.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
+                currMeshSolid = solid;
+                scene.add(solid);
+            }
 
             const ambientLight = new THREE.AmbientLight( 0xffffff, 0.6 );
 
@@ -133,32 +173,6 @@
             camera.position.y = 2.5;
 
             controls.update();
-
-            let surface = sampleSurface();
-
-            const geometry = new THREE.BufferGeometry();
-            geometry.setIndex(surface['indices']);
-            geometry.setAttribute('color', new THREE.BufferAttribute(surface['colors'], 3))
-            geometry.setAttribute('position', new THREE.BufferAttribute(surface['vertices'], 3))
-
-            // const wireframe_mat = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
-            const wireframe_mat = new THREE.MeshBasicMaterial({
-                color: "black",
-                wireframe: true,
-                transparent: false,
-                opacity: 0.25
-            });
-            wireframe_mat.opacity = 0;
-            const solid_mat = new THREE.MeshPhongMaterial( {
-                flatShading: true,
-                emissive: new THREE.Color(0xffffff),
-                emissiveIntensity: 0.1,
-                side: THREE.DoubleSide,
-                polygonOffset: true,
-                polygonOffsetFactor: 1,
-                polygonOffsetUnits: 1,
-                vertexColors: true
-            } );
 
             const GRID_SIZE = 3;
 
@@ -175,14 +189,6 @@
             let z_plane = new THREE.GridHelper(GRID_SIZE, 10, 0x222222, 0xbbbbbb);
 
             scene.add(x_plane, y_plane, z_plane);
-            
-            const wireframe = new THREE.Mesh(geometry, wireframe_mat);
-            wireframe.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
-            scene.add(wireframe);
-
-            const solid = new THREE.Mesh(geometry, solid_mat);
-            solid.scale.copy(new THREE.Vector3(1.5, 1.5, 1.5));
-            scene.add(solid);
 
             const castGeometry = new THREE.SphereGeometry(0.025);
             const castMaterial = new THREE.MeshStandardMaterial({
@@ -197,20 +203,24 @@
 
             function animate() {
                 requestAnimationFrame(animate);
-                raycaster.setFromCamera(pointer, camera);
-                const intersections = raycaster.intersectObject(solid);
 
-                if (intersections.length > 0) currCast = intersections[0].point;
-                else currCast = null;
+                if (currMeshSolid != null) {
+                    raycaster.setFromCamera(pointer, camera);
+                    const intersections = raycaster.intersectObject(currMeshSolid);
 
-                controls.update();
+                    if (intersections.length > 0) currCast = intersections[0].point;
+                    else currCast = null;
 
-                if (currCast == null) castMaterial.opacity = 0;
-                else {
-                    castMaterial.opacity = 1;
-                    castIndicator.position.copy(currCast);
+                    if (currCast == null) castMaterial.opacity = 0;
+                    else {
+                        castMaterial.opacity = 1;
+                        castIndicator.position.copy(currCast);
+                    }
+                } else {
+                    castMaterial.opacity = 0;
                 }
 
+                controls.update();
                 renderer.render(scene, camera);
             }
 
@@ -228,7 +238,7 @@
                     extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
                     if (extraVars.length > 0) alert("Sorry, I only know two letters of the alphabet, not: " + extraVars.toString());
                     else {
-                        alert('valid expression.');
+                        
                     }
                     evt.preventDefault();
                 }
