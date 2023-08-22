@@ -95,4 +95,25 @@ class Adam extends Optimizer {
     }
 }
 
-OPTIMIZERS = [VanillaSGD, Momentum, Adagrad, Adam];
+class RMSProp extends Optimizer {
+    constructor() {
+        super();
+        this.params.lr = 0.01;
+        this.params.beta = 0.9;
+        this.running = math.zeros(2);
+    }
+
+    apply(pos, grads) {
+        this.running = math.add(
+            math.multiply(this.params.beta, this.running),
+            math.multiply(1 - this.params.beta, math.map(grads, math.square))
+        );
+        let update = math.dotMultiply(
+            math.dotDivide(-this.params.lr, math.map(this.running, math.sqrt)),
+            grads
+        );
+        return math.add(pos, update);
+    }
+}
+
+OPTIMIZERS = [VanillaSGD, Momentum, Adagrad, Adam, RMSProp];
