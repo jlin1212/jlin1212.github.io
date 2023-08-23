@@ -375,6 +375,7 @@
 
             window.addEventListener( 'pointermove', onPointerMove );
             window.addEventListener( 'pointerdown', onPointerDown );
+            window.addEventListener( 'mousedown', onPointerDown );
 
             function handleExprInput() {
                 let expr = ce.parse(mfield.getValue('latex'));
