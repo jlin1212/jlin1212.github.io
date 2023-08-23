@@ -92,7 +92,7 @@
             function onPointerDown( event ) {
                 if (currCast == null) return;
                 // console.dir(event);
-                if (event.ctrlKey) {
+                if (event.ctrlKey || document.getElementById('control-click').checked) {
                     let err = false;
                     let fields = [...document.querySelectorAll('#params input')];
 
@@ -559,10 +559,14 @@
             <div id="params"></div>
             <hr />
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
+            <div class="help">Mobile users: check the "click to place" box in<br />the menu below.</div>
             <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan.</div>
             <hr />
             <div class="control">
-                <input id="control-rotate" type="checkbox" /> Auto-Rotate
+                <input id="control-rotate" type="checkbox" /> Auto rotate
+            </div>
+            <div class="control">
+                <input id="control-click" type="checkbox" /> Click to place
             </div>
             <a href="/" style="display: block; font-size: 8pt; text-align: right;">back to home</a>
         </div>
