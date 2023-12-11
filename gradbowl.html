@@ -152,12 +152,15 @@
                 let zMin = Infinity;
                 let zMax = -Infinity;
 
+                ce.pushScope();
+
                 for (let x = -AMP; x < AMP; x += step) {
                     for (let y = -AMP; y < AMP; y += step) {
                         let x_scaled = SCALE * x;
                         let y_scaled = SCALE * y;
 
-                        ce.set({ x: x_scaled, y: y_scaled });
+                        
+                        ce.assign({ x: x_scaled, y: y_scaled });
 
                         let z = expr.N().numericValue;
                         // let z = 0.1 * Math.sin(x_scaled**2 + y_scaled**2);
@@ -168,6 +171,8 @@
                         if (z > zMax) zMax = z;
                     }
                 }
+
+                ce.popScope();
 
                 for (let i = 0; i < vertices.length / 3; i++) {
                     if (zMin != zMax) {
@@ -264,16 +269,18 @@
                     }
 
                     // Compute the gradient at each point
-                    ce.set({ x: obj.position.x + EPS, y: obj.position.z });
+                    ce.pushScope();
+
+                    ce.assign({ x: obj.position.x + EPS, y: obj.position.z });
                     let z_plus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x - EPS, y: obj.position.z });
+                    ce.assign({ x: obj.position.x - EPS, y: obj.position.z });
                     let z_minus_dx = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x, y: obj.position.z + EPS });
+                    ce.assign({ x: obj.position.x, y: obj.position.z + EPS });
                     let z_plus_dy = currExpr.N().numericValue;
 
-                    ce.set({ x: obj.position.x, y: obj.position.z - EPS });
+                    ce.assign({ x: obj.position.x, y: obj.position.z - EPS });
                     let z_minus_dy = currExpr.N().numericValue;
 
                     let grad_x = (z_plus_dx - z_minus_dx) / (2 * EPS);
@@ -284,7 +291,10 @@
                     let newPos = pnt.optimizer.apply(math.matrix([obj.position.x, obj.position.z]), grad);
 
                     // Compute the Z height of the new location
-                    ce.set({ x: newPos.get([0]), y: newPos.get([1]) });
+                    ce.assign({ x: newPos.get([0]), y: newPos.get([1]) });
+
+                    ce.popScope();
+
                     let newZ = currExpr.N().numericValue;
 
                     // Apply the new loc (Vector3)
