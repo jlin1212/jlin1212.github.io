@@ -169,7 +169,8 @@ body {
 
 .threedee {
     font-weight: 700;
-    text-shadow: 0px 1px 0px gray;
+    text-shadow: 0px 3px 0px gray;
+    font-size: 20pt;
 }
 
 #pic {
@@ -191,4 +192,77 @@ body {
     text-align: center;
     font-size: 10px;
     font-style: italic;
+}
+
+@media only screen and (max-width: 1800px) {
+    #spinner .item {
+        flex-direction: column;
+        align-items: center;
+        width: 60vw;
+    }
+
+    #spinnerleft {
+        left: 1em;
+    }
+    
+    #spinnerright {
+        right: 1em;
+    }
+
+    #spinner .title {
+        font-size: 20pt;
+    }
+
+    #spinner .description {
+        font-size: 10pt;
+    }
+
+    #spinner .thumbnail {
+        width: 50vw; height: auto;
+    }
+
+    #about {
+        padding: 0;
+    }
+
+    #pic {
+        float: none;
+        text-align: center;
+        margin: 30px;
+        margin-bottom: 60px;
+    }
+
+    #about h1 {
+        padding-bottom: 0px;
+    }
+
+    #header {
+        padding: 2em 2em;
+        width: 100vw;
+        box-sizing: border-box;
+    }
+
+    #header .suptitle {
+        font-weight: 150;
+        font-size: 15pt;
+        font-style: italic;
+    }
+    
+    #header .title {
+        font-weight: 765;
+        font-size: 50pt;
+        text-shadow: 2px 4px black;
+    }
+    
+    #header .subtitle {
+        font-size: 10pt;
+        transform: rotate(-5deg) translate3d(0, 0, 0);
+        position: relative;
+        bottom: 20px;
+        left: 0px;
+        text-align: center;
+        color: red;
+        text-shadow: 0px 0px 1px black;
+        box-sizing: border-box;
+    }
 }
