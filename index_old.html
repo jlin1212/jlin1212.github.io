@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <title>jlin</title>
+    </head>
+    <body>
+        <center>
+            <h2>jonathan lin #<span id="lindex" title="just a random number between 7000000000 and 12345, the two most important numbers on earth"></span></h2>
+
+            <h3>some neat tricks</h3>
+            <h3>the best websites never have css (on the home page)</h3>
+            <h5>(that being said, most of my pages use pretty new html5, es6-style javascript, and css, so try not to view this in internet explorer etc.)</h5>
+
+            <p>
+                <h4>Julia Set Renderer</h4>
+                <a href="julia.html"><img border='1' src="screenshots/julia.png" width="500" /></a><br />
+                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
+                    <b><i>Best for beefy browsers.</i></b> 
+                    Takes a Julia set and <a href="julia.html">renders a 3D landscape</a>.
+                    I may write some more about how this was done, but in brief the rendering is accomplished by raymarching a signed distance function derived from the Douady-Hubbard potential, which was used
+                    to define an implicit surface that could be refined with classic Mandelbrot-style iteration. Actually even writing that was a lot of work, so maybe not. Just look at the code if you really care.
+                </p>
+            </p>
+            <p>
+                <h4>Optimizer Sandbox - The GRADBOWL</h4>
+                <a href="gradbowl.html"><img border='1' src="screenshots/gradbowl.png" width="500" /></a><br />
+                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
+                    Define a 2D surface using a function of your own creation (default starter pictured).
+                    Pick a starting point and <a href="gradbowl.html">watch how different optimizers behave in your landscape</a>.
+                </p>
+            </p>
+            <p>
+                <h4>My One Random Wikipedia Article</h4>
+                <a href="https://en.wikipedia.org/wiki/Lenia"><img border='1' src="screenshots/lenia.png" width="500" /></a><br />
+                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
+                    Why did I <a href="https://en.wikipedia.org/wiki/Lenia">write about this?</a>
+                </p>
+            </p>
+            <p>
+                <h4>Catastrophic Catacaustics</h4>
+                <a href="caustics.html">here</a>
+                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
+                    Probably one of the most overlooked aspects of ray optics. Try different parameterized envelope mirrors and ray origins.
+                </p>
+            </p>
+            </div>
+        </center>
+    </body>
+    <script>
+        document.getElementById('lindex').innerHTML = Math.floor(Math.random() * 7000000000 + 12345);
+        document.querySelectorAll('h4').forEach((section, idx) => section.innerHTML = (idx + 1) + '. ' + section.innerHTML) // Cursed string arithmetic
+    </script>
+</html>

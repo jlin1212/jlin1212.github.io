@@ -1,0 +1,194 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #222;
+}
+
+#landing {
+    padding-bottom: 4.5em;
+    position: relative;
+}
+
+#header {
+    font-family: "Inter", sans-serif;
+    display: inline-block;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4.5em;
+    user-select: none;
+    color: white;
+}
+
+#header .suptitle {
+    font-weight: 150;
+    font-size: 15pt;
+    font-style: italic;
+}
+
+#header .title {
+    font-weight: 765;
+    font-size: 50pt;
+    text-shadow: 2px 4px black;
+}
+
+#header .subtitle {
+    font-family: 'Gloria Hallelujah';
+    text-align: right;
+    font-weight: 200;
+    font-size: 15pt;
+    transform: rotate(-5deg) translate3d(0, 0, 0);
+    position: relative;
+    bottom: 20px;
+    left: 40px;
+    color: red;
+    text-shadow: 0px 0px 1px black;
+}
+
+#about {
+    background-color: rgb(228, 228, 255);
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.6);
+    padding: 0px 45em;
+    margin-bottom: 5em;
+    padding-bottom: 5em;
+}
+
+#about h1 {
+    font-weight: 765;
+    font-size: 30pt;
+    text-align: center;
+    padding: 2em;
+}
+
+#spinner {
+    text-align: center;
+    z-index: 10;
+    position: relative;
+    display: flex;
+    gap: 100px;
+    width: 100vw;
+    overflow: hidden;
+}
+
+#spinner .item {
+    display: inline-flex;
+    width: 60vw;
+    font-family: 'Inter', sans-serif;
+    background-color: white;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.4);
+    padding: 2em;
+    transition: 0.1s;
+    user-select: none;
+    position: relative;
+    opacity: 0.5;
+    filter: blur(2px);
+}
+
+#spinner .item.active {
+    cursor: pointer;
+    opacity: 1;
+    filter: none;
+}
+
+#spinner .item.active:hover {
+    transform: scale(1.05);
+}
+
+#spinner .thumbnail {
+    width: 800px; height: auto;
+}
+
+#spinner .info {
+    padding: 20px;
+    text-align: left;
+    min-width: 10vw;
+}
+
+.info p {
+    padding-bottom: 1em;
+}
+
+#spinner .title {
+    font-weight: 700;
+    font-size: 30pt;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+#about p {
+    padding: 1em;
+    line-height: 1.8em;
+    padding-top: 0em;
+    text-align: justify;
+}
+
+#landing .background {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.3;
+    background-size: 150% auto;
+    background-attachment: fixed;
+    z-index: 0;
+    filter: blur(5px);
+}
+
+#spinner .control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 50pt;
+    cursor: pointer;
+    transition: 0.05s;
+    text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.7);
+    z-index: 200;
+    user-select: none;
+}
+
+#spinner .control:hover {
+    color: rgba(255, 255, 255, 1);
+    transform: translateY(-50%) scale(1.1);
+}
+
+#spinnerleft {
+    left: 3em;
+}
+
+#spinnerright {
+    right: 3em;
+}
+
+#about h1 {
+    text-shadow: 0px 1px 0px white;
+}
+
+.threedee {
+    font-weight: 700;
+    text-shadow: 0px 1px 0px gray;
+}
+
+#pic {
+    float: right;
+    margin: 20px;
+    position: relative;
+}
+
+#pic img {
+    height: 300px;
+}
+
+#caption {
+    position: absolute;
+    width: 100%;
+    bottom: -20px;
+    left: 50%;
+    transform: translate(-50%);
+    text-align: center;
+    font-size: 10px;
+    font-style: italic;
+}

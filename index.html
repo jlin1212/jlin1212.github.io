@@ -1,51 +1,56 @@
 <html>
     <head>
-        <title>jlin</title>
+        <title>Jon Lin's Widget Spinner</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <link rel="stylesheet" href="index.css">
     </head>
     <body>
-        <center>
-            <h2>jonathan lin #<span id="lindex" title="just a random number between 7000000000 and 12345, the two most important numbers on earth"></span></h2>
-
-            <h3>some neat tricks</h3>
-            <h3>the best websites never have css (on the home page)</h3>
-            <h5>(that being said, most of my pages use pretty new html5, es6-style javascript, and css, so try not to view this in internet explorer etc.)</h5>
-
-            <p>
-                <h4>Julia Set Renderer</h4>
-                <a href="julia.html"><img border='1' src="screenshots/julia.png" width="500" /></a><br />
-                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
-                    <b><i>Best for beefy browsers.</i></b> 
-                    Takes a Julia set and <a href="julia.html">renders a 3D landscape</a>.
-                    I may write some more about how this was done, but in brief the rendering is accomplished by raymarching a signed distance function derived from the Douady-Hubbard potential, which was used
-                    to define an implicit surface that could be refined with classic Mandelbrot-style iteration. Actually even writing that was a lot of work, so maybe not. Just look at the code if you really care.
-                </p>
-            </p>
-            <p>
-                <h4>Optimizer Sandbox - The GRADBOWL</h4>
-                <a href="gradbowl.html"><img border='1' src="screenshots/gradbowl.png" width="500" /></a><br />
-                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
-                    Define a 2D surface using a function of your own creation (default starter pictured).
-                    Pick a starting point and <a href="gradbowl.html">watch how different optimizers behave in your landscape</a>.
-                </p>
-            </p>
-            <p>
-                <h4>My One Random Wikipedia Article</h4>
-                <a href="https://en.wikipedia.org/wiki/Lenia"><img border='1' src="screenshots/lenia.png" width="500" /></a><br />
-                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
-                    Why did I <a href="https://en.wikipedia.org/wiki/Lenia">write about this?</a>
-                </p>
-            </p>
-            <p>
-                <h4>Feynman's Favorite Trick, or Leibniz's Rule</h4>
-                <p style="width: 400px; text-align: justify"> <!-- Yeah, I cheated. It probably had to be done. -->
-                    A trick that Feynman references at least twice in his famous essay collection. What's all the hype about? <u>Coming soon</u>...
-                </p>
-            </p>
+        <div id="landing">
+            <div class="background"></div>
+            <div id="header">
+                <div class="suptitle">JON LIN'S</div>
+                <div class="title">WIDGET SPINNER</div>
+                <div class="subtitle">(vaguely educational toys and topics)</div>
             </div>
-        </center>
+            <div id="spinner">
+                <div id="spinnerleft" class="control material-symbols-outlined">arrow_back_ios</div>
+                <div id="spinnerright" class="control material-symbols-outlined">arrow_forward_ios</div>
+            </div>
+        </div>
+        <div id="about">
+            <h1>about me</h1>
+            <div id="about_body">
+                <div id="pic">
+                    <img src="img/me.jpg" />
+                    <span id="caption">(pictured: some guy)</span>
+                </div>
+                <p>
+                    Hi, I'm Jonathan (Lin). <i>Professionally</i> speaking, I've been interested in the dynamics and applications of computers in all their forms, whether those be 
+                    traditional von Neumann "grocery list" Turing machines, or alt/indie styles of computing like neuromorphic, deep learning, and reservoir computers. However, I generally
+                    take thoroughly unpaid interests in nonlinear dynamics, chaos, and pattern formation - which appear in fractals, swarms, and cellular automata, among other things. Above, 
+                    I've put links to toys and other things I've made for myself and others, with some hands-on ways to poke and prod at these beautiful things to learn more about them.
+                </p>
+                <p>
+                    I have a B.S. in Computer Science from the University of Maryland, College Park, an MEng. in Bioengineering from the same, and I'm currently working in 
+                    T-4 at Los Alamos National Laboratory on neuromorphic computing using memristors and other memory materials like photorefractive crystals with 
+                    <a href="https://sites.google.com/site/francescocaravelli/">Francesco Caravelli</a>. I've also animated a course in complex dynamics with the
+                    <a href="https://www.santafe.edu/">Santa Fe Institute</a> using <a href='https://www.3blue1brown.com/'>Grant Sanderson's</a> <a href='https://github.com/3b1b/manim'>Manim</a> 
+                    library.
+                </p>
+            </div>
+        </div>
+        <template id="spinneritem">
+            <div class="item">
+                <img class="thumbnail" />
+                <div class="info">
+                    <div class="title"></div>
+                    <div class="description"></div>
+                </div>
+            </div>
+        </template>
     </body>
-    <script>
-        document.getElementById('lindex').innerHTML = Math.floor(Math.random() * 7000000000 + 12345);
-        document.querySelectorAll('h4').forEach((section, idx) => section.innerHTML = (idx + 1) + '. ' + section.innerHTML) // Cursed string arithmetic
-    </script>
+    <script src="index.js"></script>
 </html>
