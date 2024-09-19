@@ -28,7 +28,7 @@
             const TEX_FUNCS = [
                 ['Sinefield', `0.2\\sin(9x^2+9y^2)`],
                 ['Pitt Stop', `-e^{-5(x^2+y^2)}`],
-                ['Ackley', '-5e^{-0.1\\sqrt{0.5(x^2+y^2)}}-e^{0.5(\\cos(4\\pi x)+\\cos(4\\pi y))}+(5+e)'],
+                ['Ackley', '-5e^{-0.5\\sqrt{0.5(x^2+y^2)}}-e^{0.2(\\cos(4\\pi x)+\\cos(4\\pi y))}+(4+e)'],
                 ['Bukin', '\\sqrt{\\left|25y-5x^2\\right|}+0.01\\left|x+10\\right|'],
                 ['Shallow Incline', '0.01\\left|x+y\\right|']
             ];
@@ -390,7 +390,7 @@
             function handleExprInput() {
                 let expr = ce.parse(mfield.getValue('latex'));
 
-                let freeVars = expr.freeVars;
+                let freeVars = expr.unknowns;
 
                 let extraVars = freeVars.toSpliced(freeVars.indexOf('x'), 1);
                 extraVars = extraVars.toSpliced(extraVars.indexOf('y'), 1);
@@ -571,7 +571,8 @@
             <hr />
             <div class="help">After setting params, <kbd>Ctrl</kbd>-click on surface.</div>
             <div class="help">Mobile users: check the "click to place" box in<br />the menu below.</div>
-            <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan.</div>
+            <div class="help">Drag to rotate. <kbd>Shift</kbd>-click to pan. Mousewheel to zoom.</div> 
+            <div class="help">For instant comedy, choose a high learning rate (~0.1 or even ~1).</div>
             <hr />
             <div class="control">
                 <input id="control-rotate" type="checkbox" /> Auto rotate
