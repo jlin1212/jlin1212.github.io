@@ -5,6 +5,8 @@
 
 body {
     background-color: #222;
+    padding-bottom: 5em;
+    position: relative;
 }
 
 #landing {
@@ -48,20 +50,24 @@ body {
     text-shadow: 0px 0px 1px black;
 }
 
-#about {
+#about, #papers {
     background-color: rgb(228, 228, 255);
     font-family: 'Inter', sans-serif;
     box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.6);
     padding: 0px 45em;
-    margin-bottom: 5em;
     padding-bottom: 5em;
 }
 
-#about h1 {
+#papers {
+    background-color: rgb(223, 255, 249);
+}
+
+#about h1, #papers h1 {
     font-weight: 765;
     font-size: 30pt;
     text-align: center;
     padding: 2em;
+    text-shadow: 0px 1px 0px white;
 }
 
 #spinner {
@@ -119,7 +125,7 @@ body {
     margin-bottom: 15px;
 }
 
-#about p {
+#about p, #papers p {
     padding: 1em;
     line-height: 1.8em;
     padding-top: 0em;
@@ -163,10 +169,6 @@ body {
     right: 3em;
 }
 
-#about h1 {
-    text-shadow: 0px 1px 0px white;
-}
-
 .threedee {
     font-weight: 700;
     text-shadow: 0px 3px 0px gray;
@@ -192,6 +194,33 @@ body {
     text-align: center;
     font-size: 10px;
     font-style: italic;
+}
+
+#footer {
+    box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.6);
+    height: 5em;
+    width: 100vw;
+    position: absolute;
+    bottom: 0px;
+}
+
+#papers ul {
+    padding: 0.5em 3em;
+}
+
+#papers li {
+    padding-bottom: 1em;
+}
+
+#papers a {
+    font-weight: bold;
+    text-decoration: none;
+    color: rgb(0, 77, 77);
+    transition: 0.1s;
+}
+
+#papers a:hover {
+    color: rgb(0, 111, 111);
 }
 
 @media only screen and (max-width: 1800px) {

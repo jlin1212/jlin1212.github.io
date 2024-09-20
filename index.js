@@ -11,9 +11,9 @@ SPINNER = [{
 }, {
     thumbnail: 'gradbowl.png',
     title: 'Gradbowl',
-    description: `We often read about optimizer hyperpameters like "momentum", "alpha", and "beta", but what do these actually mean in practice? 
-    Here, you can specify a landscape of your own making and set different optimizers to work. Play with hyperparameters and see how these change 
-    the trajectories of the balls as they struggle downhill.`,
+    description: `<p>We often read about optimizer hyperpameters like "momentum", "alpha", and "beta", but what do these actually mean in practice?</p>
+    <p>Here, you can specify a landscape of your own making and set different optimizers to work. Play with hyperparameters and see how these change 
+    the trajectories of the balls as they struggle downhill. See if you can find the right parameters to make optimizers escape local minima.</p>`,
     href: 'gradbowl.html',
 }, {
     thumbnail: 'lenia.png',
