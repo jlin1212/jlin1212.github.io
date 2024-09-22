@@ -223,6 +223,19 @@ body {
     color: rgb(0, 111, 111);
 }
 
+li i {
+    color: rgb(0, 0, 0);
+}
+
+.blurb {
+    font-style: italic;
+    font-size: 10pt;
+    display: block;
+    padding: 1em;
+    color: rgb(0, 29, 0);
+    text-align: justify;
+}
+
 @media only screen and (max-width: 1800px) {
     #spinner .item {
         flex-direction: column;
@@ -250,7 +263,7 @@ body {
         width: 50vw; height: auto;
     }
 
-    #about {
+    #about, #papers {
         padding: 0;
     }
 
