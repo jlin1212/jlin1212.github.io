@@ -240,10 +240,19 @@
         <div id="settings">
             <h1>Juliascape <button id="showButton" style="display: none">Show</button></h1>
             <div id="container">
-                <div class="section">z^2 + c : complex parameter c</div>
+                <div class="section">z<sup>2</sup> + c : complex parameter c</div>
                 <div class="control">
-                    <label>a:</label> <input id="complexA" type="number" size="4" />
-                    <label>b:</label> <input id="complexB" type="number" size="4" />
+                    <label>a:</label> <input id="complexA" type="number" size="8" />
+                    <label>b:</label> <input id="complexB" type="number" size="8" />
+                </div>
+                <i style="margin-top: 5px; display: block">No numbers of your own? Try some of these.</i>
+                <div class="control" style="margin: 10px;">
+                    <select id="seed">
+                        <option value="0">Nautilus</option>
+                        <option value="1">Snowflake</option>
+                        <option value="2">Flower</option>
+                        <option value="3">Lightning</option>
+                    </select>
                 </div>
                 <div class="section">Camera Position</div>
                 <div class="control">
@@ -270,8 +279,9 @@
                 <div class="control" style="margin-bottom: 10px;">
                     <label title="Adjust this when you zoom in (smaller values for higher zooms)">Height Scale:</label> <input id="heightScale" type="number" size="4" />
                     <br /><br /><i>Try lowering this parameter if things are fuzzy.</i>
+                    <br /><br /><b>Don't forget to hit "Render" after changing any settings!</b>
                 </div>
-                <button id="renderButton">Render</button><button id="saveButton">Save</button><button id="hideButton">Hide</button>
+                <button id="renderButton" style="transition: 0.1s">Render</button><button id="saveButton">Save</button><button id="hideButton">Hide</button>
             </div>
         </div>
         <canvas id="glCanvas"></canvas>

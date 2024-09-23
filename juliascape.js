@@ -17,6 +17,7 @@ var chunkSize = isMobile ? 80 : 100;
 
 function main() {
     document.querySelector('#colormap').onchange = changeColormap;
+    document.querySelector('#seed').onchange = changeSeed;
     document.querySelector('#hideButton').onclick = hideSettings;
     document.querySelector('#showButton').onclick = showSettings;
 
@@ -148,6 +149,20 @@ function changeColormap() {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, colormapImage);
         gl.generateMipmap(gl.TEXTURE_2D);
     });
+}
+
+SEEDS = [
+    [0.285, 0.01],
+    [-0.70176, -0.3842],
+    [-0.8, 0.156],
+    [0, 0.8]
+]
+
+function changeSeed() {
+    let seed = SEEDS[parseInt(document.querySelector('#seed').value)];
+    document.querySelector('#complexA').value = seed[0];
+    document.querySelector('#complexB').value = seed[1];
+    draw();
 }
 
 function updateSceneParam(uniform, id) {
