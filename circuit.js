@@ -136,7 +136,7 @@ function mesh() {
         .attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0)
         .attr('transform', function(d) {
             let angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
-            return `rotate(${angle+90}, ${this.x.baseVal.value+(sourceW/2)}, ${this.y.baseVal.value+(sourceH/2)})`;
+            return `rotate(${angle+270}, ${this.x.baseVal.value+(sourceW/2)}, ${this.y.baseVal.value+(sourceH/2)})`;
         });
 }
 
