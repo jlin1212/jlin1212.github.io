@@ -41,6 +41,7 @@ let simulation = d3.forceSimulation(nodes)
     .on('end', mesh);
 
 const node = svg.append('g')
+    .attr('id', 'nodes')
     .selectAll('circle')
     .data(nodes)
     .join('circle')
@@ -53,11 +54,15 @@ let delaunay = null;
 let links = null;
 let link = null;
 
+let potential_operator = null;
 let OmegaA = null;
 let v = null;
 let i = null;
+let u = null;
 let currentMode = false;
 let showFlow = false;
+
+const uScale = 15;
 
 function ticked() {
     node
@@ -93,6 +98,11 @@ function mesh() {
     let Btilde = math.subset(incidence, math.index(
         math.range(0,nodes.length-1), math.range(0,links.length)))
     let g = math.multiply(Btilde, math.transpose(Btilde))
+    
+    potential_operator = math.transpose(math.clone(incidence));
+    potential_operator.resize([links.length+1, nodes.length]);
+    potential_operator.set([links.length,0], 1);
+    potential_operator = math.pinv(potential_operator);
 
     let OmegaB = math.multiply(math.multiply(math.transpose(Btilde), math.inv(g)), Btilde)
     OmegaA = math.subtract(math.identity(links.length), OmegaB);
@@ -171,6 +181,13 @@ function updateEdges() {
 
     v = math.add(S, math.multiply(OmegaAR, S));
     i = math.multiply(math.pinv(R), v);
+    u = math.multiply(potential_operator, v.resize([links.length+1]));
+
+    let circles = svg.selectAll('g#nodes circle');
+    circles.data(u)
+        .attr('r', d => uScale / (1 + Math.exp(-Math.abs(d.value))) + (4 - 0.5 * uScale))
+        .attr('class', d => d.value > 0 ? 'out' : d.value === 0 ? '' : 'in');
+    circles.data(nodes);
 
     edges.data(currentMode ? i : v)
         .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')

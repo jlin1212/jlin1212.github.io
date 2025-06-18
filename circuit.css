@@ -115,6 +115,18 @@ g.edge[data-flow='backward'] {
     animation: flow 1s linear infinite reverse;
 }
 
+g#nodes circle {
+    transition: 0.5s;
+}
+
+g#nodes circle.in {
+    fill: rgb(93, 97, 203);
+}
+
+g#nodes circle.out {
+    fill: rgb(217, 89, 89);
+}
+
 @keyframes flow {
     from {
         stroke-dashoffset: 0px;
