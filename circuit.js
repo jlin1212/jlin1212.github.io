@@ -150,7 +150,7 @@ function updateEdges() {
     
     let S = math.matrix(links.map(l => l.bias));
     v = math.add(S, math.multiply(OmegaA, S));
-    edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 0.7);
+    edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
     edges.data(links);
 }
 
