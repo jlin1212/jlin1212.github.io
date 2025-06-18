@@ -14,11 +14,17 @@ source.setAttribute('class', 'source');
 const sourceH = source.height.baseVal.value;
 const sourceW = source.width.baseVal.value;
 
+const memristor = (await d3.xml('./circuit/memristor.svg')).children[0];
+memristor.setAttribute('class', 'memristor');
+const memristorH = memristor.height.baseVal.value;
+const memristorW = memristor.width.baseVal.value;
+
 let biasField = document.getElementById('bias-field');
 let ohmField = document.getElementById('ohm-field');
 let editDialog = document.getElementById('edit');
 let modeButton = document.getElementById('mode');
 let randomButton = document.getElementById('randomize');
+let flowButton = document.getElementById('flowView');
 
 const svg = d3.create('svg')
     .attr('width', width)
@@ -50,6 +56,7 @@ let link = null;
 let OmegaA = null;
 let v = null;
 let currentMode = false;
+let showFlow = false;
 
 function ticked() {
     node
@@ -104,7 +111,8 @@ function mesh() {
         .attr('x1', d => d.source.x)
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
+        .attr('y2', d => d.target.y)
+        .attr('data-length', d => Math.sqrt(Math.pow(d.source.x - d.target.x, 2) + Math.pow(d.source.y - d.target.y, 2)));
     
     link.append(() => resistor.cloneNode(true))
         .attr('id', '')
@@ -159,9 +167,16 @@ function updateEdges() {
         math.multiply(currentMode ? 1 : R, OmegaA),
         math.pinv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
     );
+
     v = math.add(S, math.multiply(OmegaAR, S));
-    edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
-    edges.data(links);
+    edges.data(v)
+        .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')
+        .attr('data-i', d => d.value)
+        .style('animation-duration', d => `${4 * Math.exp(-Math.abs(d.value)) + 0.1}s`)
+        .style('animation-play-state', d => Math.abs(d.value) === 0 ? 'paused' : 'running')
+        .select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
+    edges.data(links)
+        .attr('stroke-dasharray', showFlow ? '6 3' : '');
 }
 
 document.onmousedown = function(evt) {
@@ -180,6 +195,7 @@ document.onmousedown = function(evt) {
 document.onkeydown = function(evt) {
     if (evt.key === 'Escape') {
         editDialog.style.opacity = 0;
+        editDialog.style.display = 'none';
         updateEdges();
     }
 };
@@ -208,6 +224,13 @@ randomButton.onclick = function() {
     for (let i = 0; i < links.length; i++) {
         links[i].resistance = Math.floor(Math.random() * 20 + 10);
     }
+    updateEdges();
+}
+
+flowButton.onclick = function() {
+    showFlow = !showFlow;
+    flowButton.innerText = showFlow ? 'view: flow' : 'view: magnitude';
+    showFlow = flowButton.innerText !== 'view: magnitude';
     updateEdges();
 }
 
