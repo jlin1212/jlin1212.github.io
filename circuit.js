@@ -14,6 +14,10 @@ source.setAttribute('class', 'source');
 const sourceH = source.height.baseVal.value;
 const sourceW = source.width.baseVal.value;
 
+let biasField = document.getElementById('bias-field');
+let ohmField = document.getElementById('ohm-field');
+let editDialog = document.getElementById('edit');
+
 const svg = d3.create('svg')
     .attr('width', width)
     .attr('height', height)
@@ -68,17 +72,19 @@ function mesh() {
             source: nodes[ti],
             target: nodes[tj],
             id: links.length,
-            bias: 0
+            bias: 0,
+            resistance: 10
         });
     }
 
     link = svg.append('g').lower()
         .attr('stroke', '#940f0f')
         .attr('stroke-opacity', 0.6)
+        .attr('id', 'edges')
     .selectAll('g')
     .data(links).enter().append('g')
-    .attr('class', 'edge')
-    .on('click', (evt, d) => update(d));
+        .attr('class', 'edge')
+    .on('click', (evt, d) => edit(d));
 
     link.append('line')
         .attr('stroke-width', d => 2)
@@ -107,14 +113,62 @@ function mesh() {
         .attr('data-link', (d,i) => i)
         .attr('x', d => ((1 - 0.25) * d.source.x + 0.25 * d.target.x) - (sourceW / 2))
         .attr('y', d => ((1 - 0.25) * d.source.y + 0.25 * d.target.y) - (sourceH / 2))
+        .attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0)
         .attr('transform', function(d) {
             let angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
             return `rotate(${angle+90}, ${this.x.baseVal.value+(sourceW/2)}, ${this.y.baseVal.value+(sourceH/2)})`;
         });
 }
 
-function update(d) {
-    
+function edit(d) {
+    editDialog.style.opacity = 1;
+
+    let x = (d.source.x + d.target.x) / 2;
+    let y = (d.source.y + d.target.y) / 2 - 10;
+
+    editDialog.style.left = `${100*x/width}%`;
+    editDialog.style.top = `${100*y/height}%`;
+    editDialog.dataset['target'] = d.id;
+
+    biasField.innerHTML = `${d.bias}`;
+    ohmField.innerHTML = `${d.resistance}`;
 }
+
+function updateEdges() {
+    console.log(svg.selectAll('g#edges'))
+}
+
+document.onmousedown = function(evt) {
+    if (editDialog.style.opacity === 0) return;
+    switch (evt.target.tagName) {
+        case 'circle':
+        case 'path':
+            return;
+    }
+    if (editDialog.contains(evt.target)) return;
+    editDialog.style.opacity = 0;
+    updateEdges();
+}
+
+document.onkeydown = function(evt) {
+    if (evt.key === 'Escape') {
+        editDialog.style.opacity = 0;
+        updateEdges();
+    }
+};
+
+biasField.onkeyup = function() {
+    let content = this.innerHTML.trim();
+    if (content.length > 0 && !isNaN(content)) links[editDialog.dataset['target']].bias = parseFloat(this.innerHTML);
+    updateEdges();
+    console.log(links[editDialog.dataset['target']]);
+};
+
+ohmField.onkeyup = function() {
+    let content = this.innerHTML.trim();
+    if (content.length > 0 && !isNaN(content)) links[editDialog.dataset['target']].resistance = parseFloat(this.innerHTML);
+    updateEdges();
+    console.log(links[editDialog.dataset['target']]);
+};
 
 container.append(svg.node());

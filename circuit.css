@@ -1,0 +1,84 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #faead2;
+}
+
+#container { 
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+g.edge * {
+    transition: 0.5s;
+    cursor: pointer;
+}
+
+g.edge:hover line, g.edge:hover .resistor > path {
+    stroke-width: 5;
+}
+
+g.edge:hover .bias > g * {
+    stroke-width: 1.2 !important;
+}
+
+#info {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    position: absolute;
+    top: 0; left: 0;
+    margin: 15px;
+    width: 25em;
+    color: #940f0f;
+    opacity: 0.75;
+}
+
+#info h1 {
+    margin: 0;
+    font-weight: bolder;
+}
+
+#info p {
+    width: 15em;
+}
+
+#edit {
+    position: absolute;
+    background-color: #fffbf5;
+    border-radius: 10px;
+    border: 2px solid #992121;
+    color: #992121;
+    transition: 0.4s;
+    opacity: 0;
+    width: 10em;
+    display: flex;
+}
+
+#edit .half {
+    width: 5em;
+    text-align: center;
+}
+
+#edit #bias-container {
+    border-right: 2px solid #992121;
+}
+
+.half h1 {
+    margin: 2px;
+    padding: 0;
+    font-family: 'Barlow Condensed', Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 12pt;
+    font-variant: small-caps;
+}
+
+.half .value {
+    outline: 0;
+}
+
+.half .unit, .half .value {
+    font-family: 'Barlow Condensed', Arial, Helvetica, sans-serif;
+    font-weight: 600;
+    font-size: 20pt;
+    margin: 5px 0px;
+}
