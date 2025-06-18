@@ -42,10 +42,11 @@ const node = svg.append('g')
         .attr('stroke', '#85451e');
 
 let delaunay = null;
-let incidence = null;
-
 let links = null;
 let link = null;
+
+let OmegaA = null;
+let v = null;
 
 function ticked() {
     node
@@ -55,7 +56,6 @@ function ticked() {
 
 function mesh() {
     delaunay = d3.Delaunay.from(nodes, d => d.x, d => d.y);
-    incidence = Array.from({ length: N }, () => Array.from({ length: delaunay.halfedges.length }, () => 0));
     links = [];
     
     for (let i = 0; i < delaunay.halfedges.length; i++) {
@@ -64,9 +64,6 @@ function mesh() {
         if (j < 0) j = (j % 3 === 2) ? i - 2 : i + 1;
         const ti = delaunay.triangles[i];
         const tj = delaunay.triangles[j];
-        
-        incidence[ti][i] = 1;
-        incidence[tj][i] = -1;
 
         links.push({
             source: nodes[ti],
@@ -76,6 +73,18 @@ function mesh() {
             resistance: 10
         });
     }
+
+    let incidence = math.zeros(nodes.length, links.length)
+    links.forEach((l, i) => {
+        incidence.set([l.source.index,i], -1);
+        incidence.set([l.target.index,i], 1);
+    });
+    let Btilde = math.subset(incidence, math.index(
+        math.range(0,nodes.length-1), math.range(0,links.length)))
+    let g = math.multiply(Btilde, math.transpose(Btilde))
+
+    let OmegaB = math.multiply(math.multiply(math.transpose(Btilde), math.inv(g)), Btilde)
+    OmegaA = math.subtract(math.identity(links.length), OmegaB);
 
     link = svg.append('g').lower()
         .attr('stroke', '#940f0f')
@@ -121,6 +130,7 @@ function mesh() {
 }
 
 function edit(d) {
+    console.log(d);
     editDialog.style.opacity = 1;
 
     let x = (d.source.x + d.target.x) / 2;
@@ -135,8 +145,13 @@ function edit(d) {
 }
 
 function updateEdges() {
-    let edges = svg.selectAll('g#edges g.edge').data(links);
-    edges.select('.bias').attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0);
+    let edges = svg.selectAll('g#edges g.edge');
+    edges.data(links).select('.bias').attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0);
+    
+    let S = math.matrix(links.map(l => l.bias));
+    v = math.add(S, math.multiply(OmegaA, S));
+    edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 0.7);
+    edges.data(links);
 }
 
 document.onmousedown = function(evt) {
