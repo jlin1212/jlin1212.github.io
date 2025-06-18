@@ -70,7 +70,7 @@ function mesh() {
             target: nodes[tj],
             id: links.length,
             bias: 0,
-            resistance: 10
+            resistance: 1
         });
     }
 
@@ -149,7 +149,13 @@ function updateEdges() {
     edges.data(links).select('.bias').attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0);
     
     let S = math.matrix(links.map(l => l.bias));
-    v = math.add(S, math.multiply(OmegaA, S));
+    let R = math.diag(math.matrix(links.map(l => l.resistance)));
+    let Z = math.subtract(R, math.identity(links.length));
+    let OmegaAR = math.multiply(
+        math.multiply(R, OmegaA),
+        math.inv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
+    );
+    v = math.add(S, math.multiply(OmegaAR, S));
     edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
     edges.data(links);
 }
