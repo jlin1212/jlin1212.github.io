@@ -135,7 +135,8 @@ function edit(d) {
 }
 
 function updateEdges() {
-    console.log(svg.selectAll('g#edges'))
+    let edges = svg.selectAll('g#edges g.edge').data(links);
+    edges.select('.bias').attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0);
 }
 
 document.onmousedown = function(evt) {
