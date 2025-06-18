@@ -135,6 +135,7 @@ function mesh() {
 function edit(d) {
     console.log(d);
     editDialog.style.opacity = 1;
+    editDialog.style.display = 'flex';
 
     let x = (d.source.x + d.target.x) / 2;
     let y = (d.source.y + d.target.y) / 2 - 10;
@@ -156,7 +157,7 @@ function updateEdges() {
     let Z = math.subtract(R, math.identity(links.length));
     let OmegaAR = math.multiply(
         math.multiply(currentMode ? 1 : R, OmegaA),
-        math.inv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
+        math.pinv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
     );
     v = math.add(S, math.multiply(OmegaAR, S));
     edges.data(v).select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
@@ -172,6 +173,7 @@ document.onmousedown = function(evt) {
     }
     if (editDialog.contains(evt.target)) return;
     editDialog.style.opacity = 0;
+    editDialog.style.display = 'none';
     updateEdges();
 }
 

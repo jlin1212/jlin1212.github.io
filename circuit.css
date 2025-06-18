@@ -51,7 +51,7 @@ g.edge:hover .bias > g * {
     transition: 0.4s;
     opacity: 0;
     width: 10em;
-    display: flex;
+    display: none;
 }
 
 #edit .half {
