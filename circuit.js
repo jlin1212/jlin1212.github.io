@@ -17,6 +17,8 @@ const sourceW = source.width.baseVal.value;
 let biasField = document.getElementById('bias-field');
 let ohmField = document.getElementById('ohm-field');
 let editDialog = document.getElementById('edit');
+let modeButton = document.getElementById('mode');
+let randomButton = document.getElementById('randomize');
 
 const svg = d3.create('svg')
     .attr('width', width)
@@ -47,6 +49,7 @@ let link = null;
 
 let OmegaA = null;
 let v = null;
+let currentMode = false;
 
 function ticked() {
     node
@@ -152,7 +155,7 @@ function updateEdges() {
     let R = math.diag(math.matrix(links.map(l => l.resistance)));
     let Z = math.subtract(R, math.identity(links.length));
     let OmegaAR = math.multiply(
-        math.multiply(R, OmegaA),
+        math.multiply(currentMode ? 1 : R, OmegaA),
         math.inv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
     );
     v = math.add(S, math.multiply(OmegaAR, S));
@@ -190,7 +193,20 @@ ohmField.onkeyup = function() {
     let content = this.innerHTML.trim();
     if (content.length > 0 && !isNaN(content)) links[editDialog.dataset['target']].resistance = parseFloat(this.innerHTML);
     updateEdges();
-    console.log(links[editDialog.dataset['target']]);
 };
+
+modeButton.onclick = function() {
+    let useVoltage = modeButton.innerText === 'view: current';
+    modeButton.innerText = useVoltage ? 'view: voltage' : 'view: current';
+    currentMode = !useVoltage;
+    updateEdges();
+}
+
+randomButton.onclick = function() {
+    for (let i = 0; i < links.length; i++) {
+        links[i].resistance = Math.floor(Math.random() * 20 + 10);
+    }
+    updateEdges();
+}
 
 container.append(svg.node());
