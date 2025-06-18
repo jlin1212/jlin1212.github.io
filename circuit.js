@@ -55,6 +55,7 @@ let link = null;
 
 let OmegaA = null;
 let v = null;
+let i = null;
 let currentMode = false;
 let showFlow = false;
 
@@ -164,15 +165,17 @@ function updateEdges() {
     let R = math.diag(math.matrix(links.map(l => l.resistance)));
     let Z = math.subtract(R, math.identity(links.length));
     let OmegaAR = math.multiply(
-        math.multiply(currentMode ? 1 : R, OmegaA),
+        math.multiply(R, OmegaA),
         math.pinv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
     );
 
     v = math.add(S, math.multiply(OmegaAR, S));
-    edges.data(v)
+    i = math.multiply(math.pinv(R), v);
+
+    edges.data(currentMode ? i : v)
         .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')
         .attr('data-i', d => d.value)
-        .style('animation-duration', d => `${4 * Math.exp(-Math.abs(d.value)) + 0.1}s`)
+        .style('animation-duration', (d,_i) => `${8 * Math.exp(-Math.abs(i.get([_i]))) + 0.1}s`)
         .style('animation-play-state', d => Math.abs(d.value) === 0 ? 'paused' : 'running')
         .select('line').attr('stroke-width', d => Math.pow(2 * Math.log(Math.abs(d.value) + 1), 1.7) + 1.3);
     edges.data(links)
