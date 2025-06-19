@@ -101,7 +101,7 @@ function mesh() {
     
     potential_operator = math.transpose(math.clone(incidence));
     potential_operator.resize([links.length+1, nodes.length]);
-    potential_operator.set([links.length,0], 1);
+    potential_operator.set([links.length, 0], 1);
     potential_operator = math.pinv(potential_operator);
 
     let OmegaB = math.multiply(math.multiply(math.transpose(Btilde), math.inv(g)), Btilde)
@@ -183,10 +183,18 @@ function updateEdges() {
     i = math.multiply(math.pinv(R), v);
     u = math.multiply(potential_operator, v.resize([links.length+1]));
 
+    console.log(v);
+    console.log(u);
+
     let circles = svg.selectAll('g#nodes circle');
     circles.data(u)
         .attr('r', d => uScale / (1 + Math.exp(-Math.abs(d.value))) + (4 - 0.5 * uScale))
-        .attr('class', d => d.value > 0 ? 'out' : d.value === 0 ? '' : 'in');
+        .attr('class', d => {
+            let mag = Math.log10(Math.abs(d.value));
+            if (mag < -9) return 'ground';
+            if (d.value > 0) return 'out';
+            if (d.value < 0) return 'in';
+        });
     circles.data(nodes);
 
     edges.data(currentMode ? i : v)

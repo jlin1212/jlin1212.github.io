@@ -115,10 +115,6 @@ g.edge[data-flow='backward'] {
     animation: flow 1s linear infinite reverse;
 }
 
-g#nodes circle {
-    transition: 0.5s;
-}
-
 g#nodes circle.in {
     fill: rgb(93, 97, 203);
 }
