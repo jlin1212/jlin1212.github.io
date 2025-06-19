@@ -45,7 +45,7 @@ const node = svg.append('g')
     .selectAll('circle')
     .data(nodes)
     .join('circle')
-        .attr('r', 4)
+        .attr('r', 2)
         .attr('fill', '#fff')
         .attr('stroke-width', 3)
         .attr('stroke', '#85451e');
@@ -188,7 +188,7 @@ function updateEdges() {
 
     let circles = svg.selectAll('g#nodes circle');
     circles.data(u)
-        .attr('r', d => uScale / (1 + Math.exp(-Math.abs(d.value))) + (4 - 0.5 * uScale))
+        .attr('r', d => uScale / (1 + Math.exp(-Math.abs(d.value))) + (2 - 0.5 * uScale))
         .attr('class', d => {
             let mag = Math.log10(Math.abs(d.value));
             if (mag < -9) return 'ground';
