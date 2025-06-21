@@ -222,6 +222,7 @@ function updateEdges() {
 
     edges.data(edgeData)
         .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')
+        .attr('stroke', d => d.value < 0 ? '#940f0f' : '#163669')
         .attr('data-i', d => d.value)
         .style('animation-duration', (d,_i) => `${8 * Math.exp(-Math.abs(i.get([_i]))) + 0.1}s`)
         .style('animation-play-state', d => Math.abs(d.value) === 0 ? 'paused' : 'running')

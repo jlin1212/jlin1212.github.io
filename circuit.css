@@ -116,7 +116,7 @@ g.edge[data-flow='backward'] {
 }
 
 g#nodes circle.in {
-    fill: rgb(93, 97, 203);
+    fill: #5d61cb;
 }
 
 g#nodes circle.out {
