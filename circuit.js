@@ -54,13 +54,16 @@ let delaunay = null;
 let links = null;
 let link = null;
 
+let augB = null;
 let potential_operator = null;
 let OmegaA = null;
 let v = null;
 let i = null;
 let u = null;
-let currentMode = false;
+let gradient = null;
 let showFlow = false;
+
+let mode = 0;
 
 const uScale = 15;
 
@@ -98,11 +101,11 @@ function mesh() {
     let Btilde = math.subset(incidence, math.index(
         math.range(0,nodes.length-1), math.range(0,links.length)))
     let g = math.multiply(Btilde, math.transpose(Btilde))
-    
-    potential_operator = math.transpose(math.clone(incidence));
-    potential_operator.resize([links.length+1, nodes.length]);
-    potential_operator.set([links.length, 0], 1);
-    potential_operator = math.pinv(potential_operator);
+
+    augB = math.transpose(math.clone(Btilde));
+    augB.resize([links.length, nodes.length]);
+    augB.set([links.length-1, 0], 1);
+    potential_operator = math.pinv(augB);
 
     let OmegaB = math.multiply(math.multiply(math.transpose(Btilde), math.inv(g)), Btilde)
     OmegaA = math.subtract(math.identity(links.length), OmegaB);
@@ -175,16 +178,23 @@ function updateEdges() {
     let R = math.diag(math.matrix(links.map(l => l.resistance)));
     let Z = math.subtract(R, math.identity(links.length));
     let OmegaAR = math.multiply(
-        math.multiply(R, OmegaA),
+        R, OmegaA,
         math.pinv(math.add(math.identity(links.length), math.multiply(Z, OmegaA)))
     );
 
-    v = math.add(S, math.multiply(OmegaAR, S));
+    v = math.add(math.multiply(-1, S), math.multiply(-1, OmegaAR, S));
     i = math.multiply(math.pinv(R), v);
-    u = math.multiply(potential_operator, v.resize([links.length+1]));
+    u = math.multiply(potential_operator, v);
+    gradient = math.multiply(
+        math.resize(v, [1, links.length]), 
+        math.subtract(math.identity(links.length), OmegaAR),
+        math.diag(i)
+    )
 
-    console.log(v);
-    console.log(u);
+    console.log('gradient', gradient);
+    console.log('number of edges', links.length);
+    console.log('voltage', v);
+    console.log('potentials', u);
 
     let circles = svg.selectAll('g#nodes circle');
     circles.data(u)
@@ -197,7 +207,20 @@ function updateEdges() {
         });
     circles.data(nodes);
 
-    edges.data(currentMode ? i : v)
+    let edgeData = null;
+    switch(mode) {
+        case 0:
+            edgeData = i;
+            break;
+        case 1:
+            edgeData = v;
+            break;
+        case 2:
+            edgeData = math.multiply(200, gradient); // scale by 10 to make gradient visible, since it's quite small otherwise
+            break;
+    }
+
+    edges.data(edgeData)
         .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')
         .attr('data-i', d => d.value)
         .style('animation-duration', (d,_i) => `${8 * Math.exp(-Math.abs(i.get([_i]))) + 0.1}s`)
@@ -242,9 +265,21 @@ ohmField.onkeyup = function() {
 };
 
 modeButton.onclick = function() {
-    let useVoltage = modeButton.innerText === 'view: current';
-    modeButton.innerText = useVoltage ? 'view: voltage' : 'view: current';
-    currentMode = !useVoltage;
+    mode = (mode + 1) % 3;
+    switch(mode) {
+        case 0:
+            modeButton.innerText = 'view: current';
+            break;
+        case 1:
+            modeButton.innerText = 'view: voltage';
+            break;
+        case 2:
+            modeButton.innerHTML = `view: &part;<sub>r</sub> v`;
+            break;
+        default:
+            modeButton.innerText = 'view: unknown';
+            break;
+    }
     updateEdges();
 }
 
