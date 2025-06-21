@@ -25,6 +25,7 @@ let editDialog = document.getElementById('edit');
 let modeButton = document.getElementById('mode');
 let randomButton = document.getElementById('randomize');
 let flowButton = document.getElementById('flowView');
+let zeroButton = document.getElementById('zero');
 
 const svg = d3.create('svg')
     .attr('width', width)
@@ -170,7 +171,7 @@ function edit(d) {
     ohmField.innerHTML = `${d.resistance}`;
 }
 
-function updateEdges() {
+function renderEdges() {
     let edges = svg.selectAll('g#edges g.edge');
     edges.data(links).select('.bias').attr('opacity', d => Math.abs(d.bias) > 0 ? 1 : 0);
     
@@ -222,7 +223,7 @@ function updateEdges() {
 
     edges.data(edgeData)
         .attr('data-flow', d => d.value >= 0 ? 'forward' : 'backward')
-        .attr('stroke', d => d.value < 0 ? '#940f0f' : '#163669')
+        .attr('stroke', d => d.value <= 0 ? '#940f0f' : '#163669')
         .attr('data-i', d => d.value)
         .style('animation-duration', (d,_i) => `${8 * Math.exp(-Math.abs(i.get([_i]))) + 0.1}s`)
         .style('animation-play-state', d => Math.abs(d.value) === 0 ? 'paused' : 'running')
@@ -241,28 +242,28 @@ document.onmousedown = function(evt) {
     if (editDialog.contains(evt.target)) return;
     editDialog.style.opacity = 0;
     editDialog.style.display = 'none';
-    updateEdges();
+    renderEdges();
 }
 
 document.onkeydown = function(evt) {
     if (evt.key === 'Escape') {
         editDialog.style.opacity = 0;
         editDialog.style.display = 'none';
-        updateEdges();
+        renderEdges();
     }
 };
 
 biasField.onkeyup = function() {
     let content = this.innerHTML.trim();
     if (content.length > 0 && !isNaN(content)) links[editDialog.dataset['target']].bias = parseFloat(this.innerHTML);
-    updateEdges();
+    renderEdges();
     console.log(links[editDialog.dataset['target']]);
 };
 
 ohmField.onkeyup = function() {
     let content = this.innerHTML.trim();
     if (content.length > 0 && !isNaN(content)) links[editDialog.dataset['target']].resistance = parseFloat(this.innerHTML);
-    updateEdges();
+    renderEdges();
 };
 
 modeButton.onclick = function() {
@@ -281,21 +282,28 @@ modeButton.onclick = function() {
             modeButton.innerText = 'view: unknown';
             break;
     }
-    updateEdges();
+    renderEdges();
 }
 
 randomButton.onclick = function() {
     for (let i = 0; i < links.length; i++) {
         links[i].resistance = Math.floor(Math.random() * 20 + 10);
     }
-    updateEdges();
+    renderEdges();
 }
 
 flowButton.onclick = function() {
     showFlow = !showFlow;
     flowButton.innerText = showFlow ? 'view: flow' : 'view: magnitude';
     showFlow = flowButton.innerText !== 'view: magnitude';
-    updateEdges();
+    renderEdges();
+}
+
+zeroButton.onclick = function() {
+    for (let i = 0; i < links.length; i++) {
+        links[i].bias = 0;
+    }
+    renderEdges();
 }
 
 container.append(svg.node());
