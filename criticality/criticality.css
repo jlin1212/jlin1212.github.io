@@ -152,3 +152,8 @@
     height: 100vh;
     background-image: linear-gradient(to bottom, rgb(255, 187, 0), rgb(119, 169, 201));
 }
+
+#tbc {
+    height: 100vh;
+    background-image: linear-gradient(to bottom, rgb(119, 169, 201), white);
+}
