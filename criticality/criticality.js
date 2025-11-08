@@ -200,7 +200,7 @@ function handleFixedScroll(evt) {
     let dots_cutoff = 0.5 * window.innerHeight;
     document.getElementById('dots').style.opacity = 1. - (clamp(window.scrollY, 0, dots_cutoff) / dots_cutoff);
 
-    let reveal_texts = document.querySelectorAll('.card span, #brain-graphic-container');
+    let reveal_texts = document.querySelectorAll('.card span');
     reveal_texts.forEach(function(elem, idx) {
         if (idx == 0) return;
         middle_offset = getGlobalTopOffset(elem) - pageMiddle;
@@ -208,9 +208,9 @@ function handleFixedScroll(evt) {
         elem.style.opacity = opacity;
     });
 
-    let brain_bottom = getGlobalTopOffset(document.getElementById('brain')) + document.getElementById('brain').offsetHeight;
+    let brain_bottom = getGlobalTopOffset(document.getElementById('brain')) + document.getElementById('brain').getBoundingClientRect().height;
     let seizure_top = getGlobalTopOffset(document.getElementById('seizure'));
-    let seizure_bottom = seizure_top + document.getElementById('brain').offsetHeight;
+    let seizure_bottom = seizure_top + document.getElementById('seizure').getBoundingClientRect().height;
     let critical_brain = document.querySelector('#brain span');
 
     let section_opacity = clamp(window.scrollY - (brain_bottom - 500), -600, 0) / -600;
@@ -222,7 +222,7 @@ function handleFixedScroll(evt) {
     else critical_brain.classList.remove('fixed-text-center');
 
     let brain_img = document.querySelector('#brain-graphic-container');
-    let brain_img_cutoff = getGlobalTopOffset(brain_img) + (brain_img.getBoundingClientRect().height / 2);
+    let brain_img_cutoff = getGlobalTopOffset(document.getElementById('brain')) + (brain_img.getBoundingClientRect().height / 2);
 
     let brain_graph_offset = pageMiddle - (brain_bottom - 300);
     if (brain_graph_offset > 0) {
@@ -235,8 +235,7 @@ function handleFixedScroll(evt) {
     if (pageMiddle > seizure_top && pageMiddle < seizure_bottom) seizure_graph.style.opacity = 1;
     else seizure_graph.style.opacity = 0;
 
-    if (pageMiddle > brain_img_cutoff && 
-        pageMiddle > getGlobalTopOffset(document.getElementById('brain')) &&
+    if (pageMiddle > brain_img_cutoff &&
         pageMiddle < seizure_bottom) brain_img.classList.add('fixed-text-center');
     else brain_img.classList.remove('fixed-text-center');
 
