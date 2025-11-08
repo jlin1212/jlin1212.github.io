@@ -115,7 +115,6 @@
 #brain span, #seizure span {
     position: relative;
     width: 35vw;
-    text-align: justify;
     left: 5% !important;
 }
 
@@ -147,4 +146,9 @@
 
 #seizure-graph {
     transition: 0.2s linear;
+}
+
+#sword {
+    height: 100vh;
+    background-image: linear-gradient(to bottom, rgb(255, 187, 0), rgb(119, 169, 201));
 }
