@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>Self-Organized Criticality</title>
+        <link rel="stylesheet" href="criticality.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Text:wght@200..700&display=swap" rel="stylesheet">
+    </head>
+
+    <body>
+        <div id="title-card" class="card">
+            <div id="sky"></div>
+            <div id="dots"></div>
+            <div id="mountain"></div>
+            <div id="land">
+                <span>What can we learn from a pile of sand?</span>
+            </div>
+        </div>
+        <div id="examples" class="card">
+            <span>As it turns out, sand piles are one of the simplest embodiments of a concept central to many complex systems: <b>criticality</b>.</span>
+        </div>
+        <div id="crit-def" class="card">
+            <span>Nothing is more sensitive than a critical system: tiny changes at a few <b>critical points</b> affect everything.</span>
+        </div>
+        <div id="brain" class="card">
+            <div id="brain-graphic-container">
+                <img src="./assets/brain.svg" id="brain-graphic" />
+            </div>
+            <span><b>Sometimes this is desirable:</b> if our brains were critical, for example, neurons in vastly different regions could communicate extremely quickly.</span>
+        </div>
+        <div id="seizure" class="card">
+            <span>But when neurons are too connected and too sensitive, <b>everything</b> fires and we end up with catastrophes: seizures, migraines, or panic attacks.</span>
+        </div>
+    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="criticality.js"></script>
+</html>

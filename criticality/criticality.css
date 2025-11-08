@@ -1,0 +1,150 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.card {
+    max-width: 100%;
+    font-family: 'Stack Sans Headline', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    font-size: 30pt;
+    padding: 70px 0px;
+}
+
+.card span {
+    width: 50%;
+    display: block;
+}
+
+#title-card {
+    position: relative;
+    top: 0; left: 0; height: 100vh; width: 100vw;
+}
+
+#dots {
+    width: 100%;
+    height: 60vh;
+    position: relative;
+    top: 10%;
+    left: 50%; transform: translateX(-50%);
+    position: fixed;
+}
+
+#sky {
+    background-image: linear-gradient(to bottom, rgb(0, 99, 156), #ff7b89 60%, rgb(255, 221, 152));
+    background-color: #ffd3b6; /* fallback */
+    position: absolute; top: 0; left: 0; height: 70%; width: 100%;
+}
+
+#land {
+    background-image: linear-gradient(to bottom, rgb(227, 196, 135), rgb(157, 96, 22));
+    height: 30%;
+    width: 100%;
+    position: absolute; bottom: 0; left: 0;
+    color: rgb(100, 69, 45);
+    padding: 50px;
+    box-sizing: border-box;
+}
+
+#land span {
+    display: block;
+    opacity: 0;
+    transition: 0.3s linear;
+    position: relative;
+    top: 40px;
+}
+
+#mountain {
+    background-image: linear-gradient(to bottom, rgb(120, 100, 74), rgb(255, 221, 152));
+    height: 20%;
+    width: 100%;
+    position: absolute; bottom: 30%; left: 0;
+    clip-path: polygon(100% 10%, 80% 20%, 0% 100%, 100% 100%);
+}
+
+#title-card h1 {
+    color: black;
+    position: absolute;
+    font-size: 60pt;
+    text-align: center;
+    display: block;
+    width: 100%;
+    position: relative;
+    top: 10%;
+    font-family: NewComputerModern10, serif;
+    font-weight: normal;
+}
+
+#examples {
+    width: 100vw;
+    background-color: rgb(200, 128, 40);
+    padding-bottom: 20vh;
+    color: rgb(255, 221, 152);
+}
+
+#crit-def {
+    width: 100vw;
+    background-image: linear-gradient(to bottom, rgb(200, 128, 40), rgb(227, 122, 122));
+    color: rgb(255, 241, 214);
+}
+
+#brain {
+    height: 400vh;
+    width: 100vw;
+    background-image: linear-gradient(to bottom, rgb(227, 122, 122), rgb(209, 100, 100));
+    display: block;
+    color: rgb(82, 28, 28);
+    justify-content: flex-start;
+    padding-top: 120px;
+}
+
+#seizure {
+    height: 400vh;
+    width: 100vw;
+    background-image: linear-gradient(to bottom, rgb(209, 100, 100), rgb(255, 187, 0));
+    display: block;
+    padding-top: 50px;
+    color: rgb(80, 45, 0);
+}
+
+#brain span, #seizure span {
+    position: relative;
+    width: 35vw;
+    text-align: justify;
+    left: 5% !important;
+}
+
+.fixed-text {
+    position: fixed !important;
+    top: 40px;
+}
+
+.fixed-text-center {
+    position: fixed !important;
+    top: 50%; transform: translateY(-50%);
+}
+
+#brain-graphic {
+    width: 50vw;
+    position: relative;
+}
+
+#brain-graphic-container {
+    right: 5%;
+    position: absolute;
+}
+
+#brain-graphic-container svg {
+    position: absolute;
+    bottom: 6%;
+    left: 0;
+}
+
+#seizure-graph {
+    transition: 0.2s linear;
+}
