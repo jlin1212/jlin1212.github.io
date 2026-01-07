@@ -116,6 +116,11 @@
             </p>
             <p id="random-flavor">
                 Notice that some drops trigger long cascades&mdash;avalanches&mdash;while others do almost nothing.
+                In really rare cases, an avalanche can span the entire lattice, if a drop happens at the right spot.
+                This spot is called a <i>critical point</i>.
+                <br /><br />
+                You might think that eventually the pile settles down so that big avalanches become impossible at a
+                certain point. But in fact, one is always possible: the system only gets more <i>critical</i> over time.
             </p>
         </div>
         <script type="importmap">
@@ -248,7 +253,7 @@
                         infoTitle.innerHTML = '<i>Toppling...</i>';
                         infoTitle.classList.add('unstable');
                         infoTitle.classList.remove('stable');
-                        infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...'
+                        infoText.innerHTML = `At least one site in the sandbox is currently unstable! They will lose 4 grains, transferring each to a neighbor...`
                     } else {
                         infoTitle.innerHTML = 'Stable';
                         infoTitle.classList.add('stable');
@@ -275,6 +280,7 @@
 
             document.getElementById('random').onclick = function() {
                 randomGrains = true;
+                document.getElementById('random-start').style.display = 'none';
                 setInterval(function() {
                     random_drop(state_grid);
                 }, 2000);
