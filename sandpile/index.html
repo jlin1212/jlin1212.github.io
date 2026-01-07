@@ -55,7 +55,7 @@
             camera.position.set(30, 30, 30);
             camera.lookAt(0, 0, 0);
 
-            const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambient);
 
             const light = new THREE.DirectionalLight(0xfff2b0, 1.25);
@@ -64,6 +64,8 @@
             light.castShadow = true;
             scene.add(light);
             scene.add(light.target);
+
+            const layer_colors = ['#774936', '#c38e70', '#deab90', '#edc4b3'];
 
             function render(grid) {
                 let idx = 0;
@@ -74,6 +76,7 @@
                             dummy.position.set(i - (RES / 2), z, j - (RES / 2));
                             dummy.scale.set(scale, scale, scale);
                             dummy.updateMatrix();
+                            mesh.setColorAt(idx, new THREE.Color(layer_colors[z-1]));
                             mesh.setMatrixAt(idx, dummy.matrix);
                             idx++;
                         }
