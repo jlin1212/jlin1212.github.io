@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <title>The Abelian Sandpile</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            canvas {
+                position: absolute;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.149.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.149.0/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from 'three';
+
+            const width = window.innerWidth / 28;
+            const height = window.innerHeight / 28;
+
+            const RES = 64;
+            const SCALE = 0.45;
+
+            const dummy = new THREE.Object3D();
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+            const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 0.1, 1000);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.shadowMap.enabled = true;
+            renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);
+            document.body.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshLambertMaterial({ color: 0xc97c5d });
+            const mesh = new THREE.InstancedMesh(geometry, material, RES * RES);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            scene.add(mesh);
+
+            camera.position.set(20, 20, 20);
+            camera.lookAt(0, 0, 0);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambient);
+
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(10, 30, 0);
+            light.target.position.set(0, 0, 0);
+            light.castShadow = true;
+            scene.add(light);
+            scene.add(light.target);
+
+            const clock = new THREE.Clock();
+
+            function animate() {
+                let idx = 0;
+                for (let i = 0; i < RES; i++) {
+                    for (let j = 0; j < RES; j++) {
+                        dummy.position.set(SCALE * (i - (RES / 2)), 0, SCALE * (j - (RES / 2)));
+                        dummy.scale.set(1, 1, 1);
+                        dummy.updateMatrix();
+                        mesh.setMatrixAt(idx, dummy.matrix);
+                        idx++;
+                    }
+                }
+                renderer.render(scene, camera);
+            }
+
+            renderer.setAnimationLoop(animate);
+        </script>
+    </body>
+</html>
