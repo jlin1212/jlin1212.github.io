@@ -20,7 +20,7 @@
                 left: 40px;
                 z-index: 10;
                 display: block;
-                width: 30em;
+                width: 20vw;
             }
 
             #info span {
@@ -213,7 +213,7 @@
                     infoTitle.innerHTML = '<i>Toppling...</i>';
                     infoTitle.classList.add('unstable');
                     infoTitle.classList.remove('stable');
-                    infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose all its grains and transfer one grain each to 4 neighbors...'
+                    infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...'
                 } else {
                     infoTitle.innerHTML = 'Stable';
                     infoTitle.classList.add('stable');
