@@ -50,7 +50,7 @@
                 color: rgb(108, 25, 25);
             }
 
-            #info .subtitle {
+            #info .subtitle, p {
                 font-family: 'Stack Sans Text', sans-serif;
                 font-size: 15pt;
                 color: #524939;
@@ -67,6 +67,7 @@
                 cursor: pointer;
                 margin: 20px 0px;
                 font-size: 15pt;
+                display: block;
             }
 
             #info button:hover {
@@ -93,6 +94,10 @@
             #switch:hover {
                 background-color: rgb(221, 37, 37);
             }
+
+            #random-start, #random-flavor {
+                display: none;
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,6 +110,13 @@
             <span class="title">Saturated</span>
             <span class="subtitle">Every site in the sandbox is <i>unstable</i>, having a height of 4. Things look calm now, but starting the simulation will topple every site at once...</span>
             <button id="control">See what happens &rarr;</button>
+            <p id="random-start">
+                What happens if we start dropping grains of sand at random places on this state?
+                <button id="random">Start a shower &rarr;</button>
+            </p>
+            <p id="random-flavor">
+                Notice that some drops trigger long cascades&mdash;avalanches&mdash;while others do almost nothing.
+            </p>
         </div>
         <script type="importmap">
             {
@@ -193,6 +205,10 @@
             let infoTitle = document.querySelector('#info .title');
             let infoText = document.querySelector('#info .subtitle');
 
+            let firstTopple = true;
+            let randomGrains = false;
+            let unstable = true;
+
             function update_state(state) {
                 let unstable_idx = [];
                 for (let i = 0; i < RES; i++) {
@@ -202,6 +218,7 @@
                 }
 
                 if (unstable_idx.length > 0) {
+                    unstable = true;
                     unstable_idx.forEach((idx) => {
                         state[idx[0]][idx[1]] -= 4;
                         if (idx[0] - 1 >= 0 && idx[1] - 1 >= 0) state[idx[0] - 1][idx[1] - 1] += 1;
@@ -209,29 +226,41 @@
                         if (idx[0] + 1 < RES && idx[1] - 1 >= 0) state[idx[0] + 1][idx[1] - 1] += 1;
                         if (idx[0] + 1 < RES && idx[1] + 1 < RES) state[idx[0] + 1][idx[1] + 1] += 1;
                     });
-
-                    infoTitle.innerHTML = '<i>Toppling...</i>';
-                    infoTitle.classList.add('unstable');
-                    infoTitle.classList.remove('stable');
-                    infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...'
                 } else {
-                    infoTitle.innerHTML = 'Stable';
-                    infoTitle.classList.add('stable');
-                    infoTitle.classList.remove('unstable');
-                    infoText.innerHTML = `We've reached a stable state: all sites in the lattice have no more than 3 grains.`;
-                    // let rand_i = Math.round(Math.random() * (RES - 1));
-                    // let rand_j = Math.round(Math.random() * (RES - 1));
-                    // state[rand_i][rand_j] += 1;
+                    unstable = false;
                 }
+            }
 
-                return state;
+            function random_drop(state) {
+                document.getElementById('random-start').style.display = 'none';
+                let rand_i = Math.round(Math.random() * (RES - 1));
+                let rand_j = Math.round(Math.random() * (RES - 1));
+                state[rand_i][rand_j] += 1;
             }
 
             control.onclick = function() {
-                control.hidden = true;
+                control.style.display = 'none';
                 setInterval(function() {
-                    state_grid = update_state(state_grid);
+                    update_state(state_grid);
                     render(state_grid);
+
+                    if (unstable) {
+                        infoTitle.innerHTML = '<i>Toppling...</i>';
+                        infoTitle.classList.add('unstable');
+                        infoTitle.classList.remove('stable');
+                        infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...'
+                    } else {
+                        infoTitle.innerHTML = 'Stable';
+                        infoTitle.classList.add('stable');
+                        infoTitle.classList.remove('unstable');
+                        infoText.innerHTML = `We've reached a stable state: all sites in the lattice have no more than 3 grains. However, things are never far from collapse...`;
+                        if (firstTopple && !randomGrains) {
+                            firstTopple = false;
+                            document.getElementById('random-start').style.display = 'block';
+                        }
+                    }
+
+                    document.getElementById('random-flavor').style.display = (randomGrains) ? 'block' : 'none';
                 }, 25);
             };
 
@@ -242,6 +271,13 @@
                 else camera.position.set(30, 60, 30);
                 isoView = !isoView;
                 render(state_grid);
+            }
+
+            document.getElementById('random').onclick = function() {
+                randomGrains = true;
+                setInterval(function() {
+                    random_drop(state_grid);
+                }, 2000);
             }
         </script>
     </body>
