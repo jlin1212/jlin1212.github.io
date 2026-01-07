@@ -12,9 +12,100 @@
                 top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
             }
+
+            #info {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                left: 40px;
+                z-index: 10;
+                display: block;
+                width: 30em;
+            }
+
+            #info span {
+                display: block;
+            }
+
+            #info .suptitle {
+                font-size: 15pt;
+                color: #333;
+                font-family: 'Oswald', sans-serif;
+                text-transform: uppercase;
+            }
+
+            #info .title {
+                font-family: 'Oswald', sans-serif;
+                text-transform: uppercase;
+                font-size: 40pt;
+                color: rgb(194, 46, 5);
+                margin-bottom: 60px;
+            }
+
+            #info .stable {
+                color: rgb(33, 33, 127);
+            }
+
+            #info .unstable {
+                color: rgb(108, 25, 25);
+            }
+
+            #info .subtitle {
+                font-family: 'Stack Sans Text', sans-serif;
+                font-size: 15pt;
+                color: #524939;
+                text-align: justify;
+            }
+
+            #info button {
+                background-color: black;
+                color: white;
+                font-family: 'Oswald', sans-serif;
+                text-transform: uppercase;
+                border: none;
+                padding: 5px 10px;
+                cursor: pointer;
+                margin: 20px 0px;
+                font-size: 15pt;
+            }
+
+            #info button:hover {
+                background-color: #333;
+            }
+
+            #switch {
+                display: none;
+                position: absolute;
+                bottom: 30px;
+                transform: translateX(50%);
+                right: 50%;
+                z-index: 100;
+                border: none;
+                background-color: rgb(175, 21, 21);
+                color: white;
+                font-family: 'Oswald', sans-serif;
+                padding: 10px;
+                font-size: 20pt;
+                text-transform: uppercase;
+                cursor: pointer;
+            }
+
+            #switch:hover {
+                background-color: rgb(221, 37, 37);
+            }
         </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Text:wght@200..700&display=swap" rel="stylesheet">
     </head>
     <body>
+        <button id="switch">Switch view</button>
+        <div id="info">
+            <span class="suptitle">sandbox state:</span>
+            <span class="title">Saturated</span>
+            <span class="subtitle">Every site in the sandbox is <i>unstable</i>, having a height of 4. Starting the simulation will topple every site at once...</span>
+            <button id="control">See what happens &rarr;</button>
+        </div>
         <script type="importmap">
             {
                 "imports": {
@@ -98,11 +189,11 @@
 
             render(state_grid);
 
-            function update_state(state) {
-                // let rand_i = Math.round(Math.random() * (RES - 1));
-                // let rand_j = Math.round(Math.random() * (RES - 1));
-                // state[rand_i][rand_j] += 1;
+            let control = document.getElementById('control');
+            let infoTitle = document.querySelector('#info .title');
+            let infoText = document.querySelector('#info .subtitle');
 
+            function update_state(state) {
                 let unstable_idx = [];
                 for (let i = 0; i < RES; i++) {
                     for (let j = 0; j < RES; j++) {
@@ -110,21 +201,48 @@
                     }
                 }
 
-                unstable_idx.forEach((idx) => {
-                    state[idx[0]][idx[1]] -= 4;
-                    if (idx[0] - 1 >= 0 && idx[1] - 1 >= 0) state[idx[0] - 1][idx[1] - 1] += 1;
-                    if (idx[0] - 1 >= 0 && idx[1] + 1 < RES) state[idx[0] - 1][idx[1] + 1] += 1;
-                    if (idx[0] + 1 < RES && idx[1] - 1 >= 0) state[idx[0] + 1][idx[1] - 1] += 1;
-                    if (idx[0] + 1 < RES && idx[1] + 1 < RES) state[idx[0] + 1][idx[1] + 1] += 1;
-                });
+                if (unstable_idx.length > 0) {
+                    unstable_idx.forEach((idx) => {
+                        state[idx[0]][idx[1]] -= 4;
+                        if (idx[0] - 1 >= 0 && idx[1] - 1 >= 0) state[idx[0] - 1][idx[1] - 1] += 1;
+                        if (idx[0] - 1 >= 0 && idx[1] + 1 < RES) state[idx[0] - 1][idx[1] + 1] += 1;
+                        if (idx[0] + 1 < RES && idx[1] - 1 >= 0) state[idx[0] + 1][idx[1] - 1] += 1;
+                        if (idx[0] + 1 < RES && idx[1] + 1 < RES) state[idx[0] + 1][idx[1] + 1] += 1;
+                    });
+
+                    infoTitle.innerHTML = '<i>Toppling...</i>';
+                    infoTitle.classList.add('unstable');
+                    infoTitle.classList.remove('stable');
+                    infoText.innerHTML = 'At least one site in the sandbox is currently unstable! It will lose all its grains and transfer one grain each to 4 neighbors...'
+                } else {
+                    infoTitle.innerHTML = 'Stable';
+                    infoTitle.classList.add('stable');
+                    infoTitle.classList.remove('unstable');
+                    infoText.innerHTML = `We've reached a stable state: all sites in the lattice have no more than 3 grains.`;
+                    // let rand_i = Math.round(Math.random() * (RES - 1));
+                    // let rand_j = Math.round(Math.random() * (RES - 1));
+                    // state[rand_i][rand_j] += 1;
+                }
 
                 return state;
             }
 
-            console.log(setInterval(function() {
-                state_grid = update_state(state_grid);
+            control.onclick = function() {
+                control.hidden = true;
+                setInterval(function() {
+                    state_grid = update_state(state_grid);
+                    render(state_grid);
+                }, 25);
+            };
+
+            const switchView = document.getElementById('switch');
+            let isoView = true;
+            switchView.onclick = function() {
+                if (isoView) camera.position.set(0, 60, 0);
+                else camera.position.set(30, 60, 30);
+                isoView = !isoView;
                 render(state_grid);
-            }, 10));
+            }
         </script>
     </body>
 </html>
