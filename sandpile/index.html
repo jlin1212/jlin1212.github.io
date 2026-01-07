@@ -26,8 +26,8 @@
         <script type="module">
             import * as THREE from 'three';
 
-            const width = window.innerWidth / 28;
-            const height = window.innerHeight / 28;
+            const width = window.innerWidth / 15;
+            const height = window.innerHeight / 15;
 
             const RES = 64;
             const SCALE = 0.45;
@@ -45,43 +45,66 @@
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const material = new THREE.MeshLambertMaterial({ color: 0xc97c5d });
-            const mesh = new THREE.InstancedMesh(geometry, material, RES * RES);
+            const mesh = new THREE.InstancedMesh(geometry, material, RES * RES * 4);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
 
             mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             scene.add(mesh);
 
-            camera.position.set(20, 20, 20);
+            camera.position.set(30, 30, 30);
             camera.lookAt(0, 0, 0);
 
             const ambient = new THREE.AmbientLight(0xffffff, 0.2);
             scene.add(ambient);
 
-            const light = new THREE.DirectionalLight(0xffffff, 1);
+            const light = new THREE.DirectionalLight(0xfff2b0, 1.25);
             light.position.set(10, 30, 0);
             light.target.position.set(0, 0, 0);
             light.castShadow = true;
             scene.add(light);
             scene.add(light.target);
 
-            const clock = new THREE.Clock();
-
-            function animate() {
+            function render(grid) {
                 let idx = 0;
-                for (let i = 0; i < RES; i++) {
-                    for (let j = 0; j < RES; j++) {
-                        dummy.position.set(SCALE * (i - (RES / 2)), 0, SCALE * (j - (RES / 2)));
-                        dummy.scale.set(1, 1, 1);
-                        dummy.updateMatrix();
-                        mesh.setMatrixAt(idx, dummy.matrix);
-                        idx++;
+                for (let z = 1; z <= 4; z++) {
+                    for (let i = 0; i < RES; i++) {
+                        for (let j = 0; j < RES; j++) {
+                            let scale = (grid[i][j] >= z) ? 1 : 0;
+                            dummy.position.set(i - (RES / 2), z, j - (RES / 2));
+                            dummy.scale.set(scale, scale, scale);
+                            dummy.updateMatrix();
+                            mesh.setMatrixAt(idx, dummy.matrix);
+                            idx++;
+                        }
                     }
                 }
+                mesh.instanceMatrix.needsUpdate = true;
                 renderer.render(scene, camera);
             }
 
-            renderer.setAnimationLoop(animate);
+            let state_grid = Array(RES);
+            for (let i = 0; i < RES; i++) {
+                state_grid[i] = Array(RES);
+                for (let j = 0; j < RES; j++) {
+                    state_grid[i][j] = 0;
+                }
+            }
+
+            function update_state(state) {
+                let rand_i = Math.round(Math.random() * (RES - 1));
+                let rand_j = Math.round(Math.random() * (RES - 1));
+                state[rand_i][rand_j] += 1;
+
+                let unstable_idx = [];
+
+                return state;
+            }
+
+            console.log(setInterval(function() {
+                state_grid = update_state(state_grid);
+                render(state_grid);
+            }, 10));
         </script>
     </body>
 </html>
