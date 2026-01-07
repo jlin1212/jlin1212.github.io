@@ -26,21 +26,22 @@
         <script type="module">
             import * as THREE from 'three';
 
-            const width = window.innerWidth / 15;
-            const height = window.innerHeight / 15;
+            const width = window.innerWidth / 2;
+            const height = window.innerHeight;
 
             const RES = 64;
             const SCALE = 0.45;
+            const ortho_scale = 12;
 
             const dummy = new THREE.Object3D();
 
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0xffffff);
-            const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 0.1, 1000);
+            const camera = new THREE.OrthographicCamera(-width / ortho_scale, width / ortho_scale, height / ortho_scale, -height / ortho_scale, 0.1, 1000);
 
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.shadowMap.enabled = true;
-            renderer.setSize(window.innerWidth / 2, window.innerHeight / 2);
+            renderer.setSize(window.innerWidth / 2, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -52,7 +53,8 @@
             mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             scene.add(mesh);
 
-            camera.position.set(30, 30, 30);
+            camera.position.set(30, 60, 30);
+            // camera.position.set(0, 30, 0);
             camera.lookAt(0, 0, 0);
 
             const ambient = new THREE.AmbientLight(0xffffff, 0.6);
@@ -90,16 +92,31 @@
             for (let i = 0; i < RES; i++) {
                 state_grid[i] = Array(RES);
                 for (let j = 0; j < RES; j++) {
-                    state_grid[i][j] = 0;
+                    state_grid[i][j] = 4;
                 }
             }
 
+            render(state_grid);
+
             function update_state(state) {
-                let rand_i = Math.round(Math.random() * (RES - 1));
-                let rand_j = Math.round(Math.random() * (RES - 1));
-                state[rand_i][rand_j] += 1;
+                // let rand_i = Math.round(Math.random() * (RES - 1));
+                // let rand_j = Math.round(Math.random() * (RES - 1));
+                // state[rand_i][rand_j] += 1;
 
                 let unstable_idx = [];
+                for (let i = 0; i < RES; i++) {
+                    for (let j = 0; j < RES; j++) {
+                        if (state[i][j] >= 4) unstable_idx.push([i, j])
+                    }
+                }
+
+                unstable_idx.forEach((idx) => {
+                    state[idx[0]][idx[1]] -= 4;
+                    if (idx[0] - 1 >= 0 && idx[1] - 1 >= 0) state[idx[0] - 1][idx[1] - 1] += 1;
+                    if (idx[0] - 1 >= 0 && idx[1] + 1 < RES) state[idx[0] - 1][idx[1] + 1] += 1;
+                    if (idx[0] + 1 < RES && idx[1] - 1 >= 0) state[idx[0] + 1][idx[1] - 1] += 1;
+                    if (idx[0] + 1 < RES && idx[1] + 1 < RES) state[idx[0] + 1][idx[1] + 1] += 1;
+                });
 
                 return state;
             }
