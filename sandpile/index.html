@@ -60,6 +60,10 @@
                 font-weight: 400;
             }
 
+            #info b {
+                color: #dd2525;
+            }
+
             #info button {
                 background-color: black;
                 color: white;
@@ -186,7 +190,7 @@
         <div id="info">
             <span class="suptitle">sandbox state:</span>
             <span class="title">Saturated</span>
-            <span class="subtitle">Every site in the sandbox is <i>unstable</i>, having a height of 4. Things look calm now, but starting the simulation will topple every site at once...</span>
+            <span class="subtitle">Every site in the sandbox is <b>unstable</b>, having a height of 4. Things look calm now, but starting the simulation will topple every site at once...</span>
             <button id="control">See what happens &rarr;</button>
             <p id="random-start">
                 What happens if we start dropping grains of sand at random places on this state?
@@ -258,7 +262,7 @@
             scene.add(light);
             scene.add(light.target);
 
-            const layer_colors = ['#774936', '#c38e70', '#deab90', '#edc4b3'];
+            const layer_colors = ['#774936', '#c38e70', '#deab90', '#dd2525'];
 
             function render(grid) {
                 let idx = 0;
@@ -310,7 +314,7 @@
                 drop_i = drop_idx[0];
                 drop_j = drop_idx[1];
                 drop_mesh.position.set(drop_i - (RES / 2), 100, drop_j - (RES / 2));
-                drop_shadow.position.set(drop_i - (RES / 2), 4, drop_j - (RES / 2));
+                drop_shadow.position.set(drop_i - (RES / 2), 3.2, drop_j - (RES / 2));
                 drop_height = state_grid[drop_i][drop_j] + 1;
                 shift_dropper();
             }
@@ -385,7 +389,7 @@
                         infoTitle.innerHTML = '<i>Toppling...</i>';
                         infoTitle.classList.add('unstable');
                         infoTitle.classList.remove('stable');
-                        infoText.innerHTML = `At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...`
+                        infoText.innerHTML = `At least one site in the sandbox is currently <b>unstable</b>! It will lose 4 grains, transferring each to a neighbor...`
                     } else {
                         infoTitle.innerHTML = 'Stable';
                         infoTitle.classList.add('stable');
