@@ -106,19 +106,57 @@
                 height: 200px;
                 position: absolute;
                 top: 50%; transform: translateY(-50%);
-                right: 10px;
+                right: 20px;
                 z-index: 100;
                 display: flex;
                 align-items: flex-end;
+                display: none;
+            }
+
+            #histogram::before {
+                content: "Histogram of Toppling Sizes";
+                font-family: 'Stack Sans Headline';
+                font-weight: 400;
+                position: absolute;
+                top: 0;
+                right: 50%;
+                transform: translateX(50%);
+                width: 100%;
             }
 
             #histogram .bar {
                 width: 10px;
-                background-color: rgb(92, 26, 71);
+                background-color: rgb(255, 136, 0);
                 height: 0px;
                 box-sizing: border-box;
                 border: 1px solid white;
                 transition: 0.1s linear;
+            }
+
+            #axis {
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+                border-bottom: 2px solid black;
+            }
+
+            #axis::before, #axis::after {
+                font-family: 'Stack Sans Headline';
+                font-weight: 200;
+                font-style: italic;
+                font-size: 10pt;
+            }
+
+            #axis::before {
+                content: 'smaller';
+                position: absolute;
+                left: 0;
+            }
+
+            #axis::after {
+                content: 'larger';
+                position: absolute;
+                right: 0;
             }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,7 +183,9 @@
                 certain point. But in fact, one is always possible: the system only gets more <i>critical</i> over time.
             </p>
         </div>
-        <div id="histogram"></div>
+        <div id="histogram">
+            <div id="axis"></div>
+        </div>
         <script src="https://d3js.org/d3.v4.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script type="importmap">
@@ -364,6 +404,7 @@
             }
 
             function render_histogram() {
+                document.getElementById('histogram').style.display = 'flex';
                 let bars = document.querySelectorAll('#histogram .bar');
                 if (bars.length === 0) {
                     for (let i = 0; i < 51; i++) {
@@ -387,7 +428,7 @@
                 let bin_scale = d3.max(bin_counts);
 
                 for (let i = 0; i < 51; i++) {
-                    bars[i].style.height = `${Math.round(bin_counts[i]*document.getElementById('histogram').clientHeight/bin_scale)}px`;
+                    bars[i].style.height = `${Math.round(0.8*bin_counts[i]*document.getElementById('histogram').clientHeight/bin_scale)}px`;
                 }
 
                 console.log(bins);
