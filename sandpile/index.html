@@ -166,7 +166,7 @@
 
             #pause {
                 position: absolute;
-                top: -5%;
+                top: -15%;
                 right: 50%;
                 transform: translateX(50%);
                 z-index: 101;
@@ -174,7 +174,9 @@
                 font-family: 'Oswald', sans-serif;
                 font-size: 30pt;
                 transition: 0.1s linear;
-                color: rgb(0, 0, 0);
+                color: white;
+                padding: 10px;
+                background-color: rgba(0, 0, 0, 0.5);
             }
 
             #pause.active {
@@ -464,7 +466,7 @@
 
             window.onwheel = function(evt) {
                 camera.zoom = THREE.MathUtils.clamp(
-                    camera.zoom - 0.3 * Math.sign(evt.deltaY),
+                    camera.zoom - 0.15 * Math.sign(evt.deltaY),
                     0.5,
                     10
                 );
