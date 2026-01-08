@@ -205,7 +205,7 @@
 
             const RES = 64;
             const SCALE = 0.45;
-            const ortho_scale = 12;
+            let ortho_scale = 12;
 
             const dummy = new THREE.Object3D();
 
@@ -433,6 +433,16 @@
                 }
 
                 console.log(bins);
+            }
+
+            window.onwheel = function(evt) {
+                camera.zoom = THREE.MathUtils.clamp(
+                    camera.zoom + 0.3 * Math.sign(evt.deltaY),
+                    0.5,
+                    10
+                );
+                camera.updateProjectionMatrix();
+                renderer.render(scene, camera);
             }
         </script>
     </body>
