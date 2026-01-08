@@ -55,6 +55,7 @@
                 font-size: 15pt;
                 color: #524939;
                 text-align: justify;
+                font-weight: 400;
             }
 
             #info button {
@@ -101,7 +102,7 @@
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Text:wght@200..700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Text:wght@200..700&display=swap" rel="stylesheet">
     </head>
     <body>
         <button id="switch">Switch view</button>
@@ -153,7 +154,7 @@
             document.body.appendChild(renderer.domElement);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshLambertMaterial({ color: 0xc97c5d });
+            const material = new THREE.MeshLambertMaterial({ color: 0xc38e70 });
             const mesh = new THREE.InstancedMesh(geometry, material, RES * RES * 4);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
@@ -196,6 +197,31 @@
                 renderer.render(scene, camera);
             }
 
+            const drop_mesh = new THREE.Mesh(geometry, material);
+            drop_mesh.position.set(0, 200, 0);
+            scene.add(drop_mesh);
+
+            let drop_i = null;
+            let drop_j = null;
+            let drop_height = null;
+
+            function shift_dropper() {
+                drop_mesh.position.add(new THREE.Vector3(0, -1, 0));
+                if (drop_mesh.position.y > drop_height) setTimeout(shift_dropper, 2);
+                else {
+                    drop_mesh.position.setComponent(1, 200);
+                    drop(state_grid, drop_i, drop_j);
+                }
+            }
+
+            function render_drop(drop_idx) {
+                drop_i = drop_idx[0];
+                drop_j = drop_idx[1];
+                drop_mesh.position.set(drop_i - (RES / 2), 100, drop_j - (RES / 2));
+                drop_height = state_grid[drop_i][drop_j] + 1;
+                shift_dropper();
+            }
+
             let state_grid = Array(RES);
             for (let i = 0; i < RES; i++) {
                 state_grid[i] = Array(RES);
@@ -236,11 +262,15 @@
                 }
             }
 
-            function random_drop(state) {
+            function random_site(state) {
                 document.getElementById('random-start').style.display = 'none';
                 let rand_i = Math.round(Math.random() * (RES - 1));
                 let rand_j = Math.round(Math.random() * (RES - 1));
-                state[rand_i][rand_j] += 1;
+                return [rand_i, rand_j];
+            }
+
+            function drop(state, i, j) {
+                state[i][j] += 1;
             }
 
             control.onclick = function() {
@@ -253,7 +283,7 @@
                         infoTitle.innerHTML = '<i>Toppling...</i>';
                         infoTitle.classList.add('unstable');
                         infoTitle.classList.remove('stable');
-                        infoText.innerHTML = `At least one site in the sandbox is currently unstable! They will lose 4 grains, transferring each to a neighbor...`
+                        infoText.innerHTML = `At least one site in the sandbox is currently unstable! It will lose 4 grains, transferring each to a neighbor...`
                     } else {
                         infoTitle.innerHTML = 'Stable';
                         infoTitle.classList.add('stable');
@@ -282,8 +312,9 @@
                 randomGrains = true;
                 document.getElementById('random-start').style.display = 'none';
                 setInterval(function() {
-                    random_drop(state_grid);
-                }, 2000);
+                    let drop_idx = random_site(state_grid);
+                    render_drop(drop_idx);
+                }, 4000);
             }
         </script>
     </body>
