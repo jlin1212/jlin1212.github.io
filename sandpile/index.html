@@ -40,6 +40,7 @@
                 font-size: 40pt;
                 color: rgb(194, 46, 5);
                 margin-bottom: 60px;
+                text-shadow: 0px 2px black;
             }
 
             #info .stable {
@@ -64,7 +65,7 @@
                 font-family: 'Oswald', sans-serif;
                 text-transform: uppercase;
                 border: none;
-                padding: 5px 10px;
+                padding: 10px 15px;
                 cursor: pointer;
                 margin: 20px 0px;
                 font-size: 15pt;
@@ -99,6 +100,26 @@
             #random-start, #random-flavor {
                 display: none;
             }
+
+            #histogram {
+                width: 20vw;
+                height: 200px;
+                position: absolute;
+                top: 50%; transform: translateY(-50%);
+                right: 10px;
+                z-index: 100;
+                display: flex;
+                align-items: flex-end;
+            }
+
+            #histogram .bar {
+                width: 10px;
+                background-color: rgb(92, 26, 71);
+                height: 0px;
+                box-sizing: border-box;
+                border: 1px solid white;
+                transition: 0.1s linear;
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -124,6 +145,9 @@
                 certain point. But in fact, one is always possible: the system only gets more <i>critical</i> over time.
             </p>
         </div>
+        <div id="histogram"></div>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script type="importmap">
             {
                 "imports": {
@@ -154,7 +178,7 @@
             document.body.appendChild(renderer.domElement);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshLambertMaterial({ color: 0xc38e70 });
+            const material = new THREE.MeshPhongMaterial({ color: 0xc38e70 });
             const mesh = new THREE.InstancedMesh(geometry, material, RES * RES * 4);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
@@ -247,9 +271,11 @@
             let infoTitle = document.querySelector('#info .title');
             let infoText = document.querySelector('#info .subtitle');
 
+            let unstable = false;
             let firstTopple = true;
             let randomGrains = false;
-            let unstable = true;
+            let counting = false;
+            let toppleCount = 0;
 
             function update_state(state) {
                 let unstable_idx = [];
@@ -260,6 +286,7 @@
                 }
 
                 if (unstable_idx.length > 0) {
+                    if (counting) toppleCount += unstable_idx.length;
                     unstable = true;
                     unstable_idx.forEach((idx) => {
                         state[idx[0]][idx[1]] -= 4;
@@ -319,13 +346,51 @@
                 render(state_grid);
             }
 
+            let toppleCounts = [];
+
             document.getElementById('random').onclick = function() {
                 randomGrains = true;
                 document.getElementById('random-start').style.display = 'none';
                 setInterval(function() {
+                    if (counting) {
+                        toppleCounts.push(toppleCount);
+                        render_histogram();
+                    }
+                    toppleCount = 0;
                     let drop_idx = random_site(state_grid);
                     render_drop(drop_idx);
+                    counting = true;
                 }, 4000);
+            }
+
+            function render_histogram() {
+                let bars = document.querySelectorAll('#histogram .bar');
+                if (bars.length === 0) {
+                    for (let i = 0; i < 51; i++) {
+                        let bar = document.createElement('div');
+                        bar.classList.add('bar');
+                        document.getElementById('histogram').appendChild(bar);
+                    }
+                }
+                bars = document.querySelectorAll('#histogram .bar');
+
+                const x = d3.scaleLinear()
+                    .domain([0, 1000]);
+
+                let histogram = d3.histogram()
+                    .value(d => d)
+                    .domain(x.domain())
+                    .thresholds(x.ticks(70));
+
+                let bins = histogram(toppleCounts);
+                let bin_counts = bins.map(b => b.length);
+                let bin_scale = d3.max(bin_counts);
+
+                for (let i = 0; i < 51; i++) {
+                    bars[i].style.height = `${Math.round(bin_counts[i]*document.getElementById('histogram').clientHeight/bin_scale)}px`;
+                }
+
+                console.log(bins);
             }
         </script>
     </body>
