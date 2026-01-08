@@ -201,6 +201,15 @@
             drop_mesh.position.set(0, 200, 0);
             scene.add(drop_mesh);
 
+            const shadow_geometry = new THREE.PlaneGeometry(2, 2);
+            const shadow_material = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
+            shadow_material.transparent = true;
+            shadow_material.opacity = 0.5;
+            const drop_shadow = new THREE.Mesh(shadow_geometry, shadow_material);
+            drop_shadow.rotation.x = -Math.PI / 2;
+            drop_shadow.position.set(0, 200, 0);
+            scene.add(drop_shadow);
+
             let drop_i = null;
             let drop_j = null;
             let drop_height = null;
@@ -210,6 +219,7 @@
                 if (drop_mesh.position.y > drop_height) setTimeout(shift_dropper, 2);
                 else {
                     drop_mesh.position.setComponent(1, 200);
+                    drop_shadow.position.setComponent(1, 200);
                     drop(state_grid, drop_i, drop_j);
                 }
             }
@@ -218,6 +228,7 @@
                 drop_i = drop_idx[0];
                 drop_j = drop_idx[1];
                 drop_mesh.position.set(drop_i - (RES / 2), 100, drop_j - (RES / 2));
+                drop_shadow.position.set(drop_i - (RES / 2), 4, drop_j - (RES / 2));
                 drop_height = state_grid[drop_i][drop_j] + 1;
                 shift_dropper();
             }
