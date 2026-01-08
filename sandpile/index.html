@@ -279,7 +279,7 @@
             let drop_height = null;
 
             function shift_dropper() {
-                drop_mesh.position.add(new THREE.Vector3(0, -1, 0));
+                drop_mesh.position.add(new THREE.Vector3(0, -2, 0));
                 if (drop_mesh.position.y > drop_height) setTimeout(shift_dropper, 2);
                 else {
                     drop_mesh.position.setComponent(1, 200);
@@ -404,10 +404,22 @@
             }
 
             function render_histogram() {
+                const x = d3.scaleLinear()
+                    .domain([0, 200]);
+
+                let histogram = d3.histogram()
+                    .value(d => d)
+                    .domain(x.domain())
+                    .thresholds(x.ticks(15));
+
+                let bins = histogram(toppleCounts);
+                let bin_counts = bins.map(b => b.length);
+                let bin_scale = d3.max(bin_counts);
+
                 document.getElementById('histogram').style.display = 'flex';
                 let bars = document.querySelectorAll('#histogram .bar');
                 if (bars.length === 0) {
-                    for (let i = 0; i < 51; i++) {
+                    for (let i = 0; i < bins.length; i++) {
                         let bar = document.createElement('div');
                         bar.classList.add('bar');
                         document.getElementById('histogram').appendChild(bar);
@@ -415,19 +427,7 @@
                 }
                 bars = document.querySelectorAll('#histogram .bar');
 
-                const x = d3.scaleLinear()
-                    .domain([0, 1000]);
-
-                let histogram = d3.histogram()
-                    .value(d => d)
-                    .domain(x.domain())
-                    .thresholds(x.ticks(70));
-
-                let bins = histogram(toppleCounts);
-                let bin_counts = bins.map(b => b.length);
-                let bin_scale = d3.max(bin_counts);
-
-                for (let i = 0; i < 51; i++) {
+                for (let i = 0; i < bins.length; i++) {
                     bars[i].style.height = `${Math.round(0.8*bin_counts[i]*document.getElementById('histogram').clientHeight/bin_scale)}px`;
                 }
 
