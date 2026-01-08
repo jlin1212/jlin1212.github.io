@@ -159,6 +159,24 @@
                 position: absolute;
                 right: 0;
             }
+
+            #pause {
+                position: absolute;
+                top: -10%;
+                right: 50%;
+                transform: translateX(50%);
+                z-index: 101;
+                text-transform: uppercase;
+                font-family: 'Oswald', sans-serif;
+                font-size: 30pt;
+                transition: 0.1s linear;
+                text-shadow: 0px 2px #333;
+                color: rgb(9, 117, 167);
+            }
+
+            #pause.active {
+                top: 10%;
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,6 +205,7 @@
         <div id="histogram">
             <div id="axis"></div>
         </div>
+        <span id="pause">paused</span>
         <script src="https://d3js.org/d3.v4.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script type="importmap">
@@ -216,13 +235,12 @@
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.shadowMap.enabled = true;
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.domElement.id = 'sandbox';
             document.body.appendChild(renderer.domElement);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const material = new THREE.MeshPhongMaterial({ color: 0xc38e70 });
             const mesh = new THREE.InstancedMesh(geometry, material, RES * RES * 4);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
 
             mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             scene.add(mesh);
@@ -318,11 +336,15 @@
             let counting = false;
             let toppleCount = 0;
 
+            let paused = false;
+
             function update_state(state) {
                 let unstable_idx = [];
                 for (let i = 0; i < RES; i++) {
                     for (let j = 0; j < RES; j++) {
-                        if (state[i][j] >= 4) unstable_idx.push([i, j])
+                        if (state[i][j] >= 4) {
+                            unstable_idx.push([i, j]);
+                        }
                     }
                 }
 
@@ -355,8 +377,10 @@
             control.onclick = function() {
                 control.style.display = 'none';
                 setInterval(function() {
-                    update_state(state_grid);
-                    render(state_grid);
+                    if (!paused) {
+                        update_state(state_grid);
+                        render(state_grid);
+                    }
 
                     if (unstable) {
                         infoTitle.innerHTML = '<i>Toppling...</i>';
@@ -437,12 +461,27 @@
 
             window.onwheel = function(evt) {
                 camera.zoom = THREE.MathUtils.clamp(
-                    camera.zoom + 0.3 * Math.sign(evt.deltaY),
+                    camera.zoom - 0.3 * Math.sign(evt.deltaY),
                     0.5,
                     10
                 );
                 camera.updateProjectionMatrix();
                 renderer.render(scene, camera);
+            }
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(-1, -1);
+
+            let pauseIndicator = document.getElementById('pause');
+            let sandbox = document.getElementById('sandbox');
+            sandbox.onmousemove = function(evt) {
+                mouse.x = evt.clientX * 2 / window.innerWidth - 1;
+                mouse.y = evt.clientY * 2 / window.innerHeight - 1;
+                raycaster.setFromCamera(mouse, camera);
+                let intersects = raycaster.intersectObject(mesh);
+                paused = intersects.length > 0;
+                if (paused) pauseIndicator.classList.add('active');
+                else pauseIndicator.classList.remove('active'); 
             }
         </script>
     </body>
