@@ -3,6 +3,7 @@
         <title>The Abelian Sandpile</title>
         <style>
             body {
+                background-color: #f1d6b1;
                 margin: 0;
                 padding: 0;
             }
@@ -209,7 +210,7 @@
             const dummy = new THREE.Object3D();
 
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xffffff);
+            scene.background = new THREE.Color(0xf1d6b1);
             const camera = new THREE.OrthographicCamera(-width / ortho_scale, width / ortho_scale, height / ortho_scale, -height / ortho_scale, 0.1, 1000);
 
             const renderer = new THREE.WebGLRenderer({ antialias: true });
