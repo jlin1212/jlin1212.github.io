@@ -322,11 +322,14 @@
             let drop_i = null;
             let drop_j = null;
             let drop_height = null;
+            let dropping = false;
 
             function shift_dropper() {
+                dropping = true;
                 drop_mesh.position.add(new THREE.Vector3(0, -2, 0));
                 if (drop_mesh.position.y > drop_height) setTimeout(shift_dropper, 2);
                 else {
+                    dropping = false;
                     drop_mesh.position.setComponent(1, 200);
                     drop_shadow.position.setComponent(1, 200);
                     drop(state_grid, drop_i, drop_j);
@@ -511,11 +514,11 @@
                 raycaster.setFromCamera(mouse, camera);
                 let intersects = raycaster.intersectObject(mesh);
                 
-                paused = unstable && (intersects.length > 0);
+                paused = !dropping && unstable && (intersects.length > 0);
                 if (paused) pauseIndicator.classList.add('active');
                 else pauseIndicator.classList.remove('active');
 
-                if (intersects.length > 0 && randomGrains) {
+                if (intersects.length > 0 && randomGrains && !paused) {
                     let ix = Math.floor(intersects[0].point.x);
                     let iy = Math.floor(intersects[0].point.y);
                     let iz = Math.floor(intersects[0].point.z);
