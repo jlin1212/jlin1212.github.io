@@ -102,20 +102,31 @@
                 background-color: rgb(221, 37, 37);
             }
 
-            #random-start, #random-flavor {
+            #random-start {
                 display: none;
             }
 
-            #histogram {
+            #random-flavor {
+                font-size: 11pt;
+                margin-top: 60px;
+            }
+
+            #data-display {
                 width: 20vw;
-                height: 200px;
-                position: absolute;
                 top: 50%; transform: translateY(-50%);
                 right: 20px;
+                position: absolute;
+                display: none;
+                z-index: 100;
+            }
+
+            #histogram {
+                width: 100%;
+                height: 200px;
                 z-index: 100;
                 display: flex;
                 align-items: flex-end;
-                display: none;
+                position: relative;
             }
 
             #histogram::before {
@@ -198,6 +209,11 @@
                 What happens if we start dropping grains of sand at random places on this state?
                 <button id="random">Start a shower &rarr;</button>
             </p>
+        </div>
+        <div id="data-display">
+            <div id="histogram">
+                <div id="axis"></div>
+            </div>
             <p id="random-flavor">
                 Notice that some drops trigger long cascades&mdash;avalanches&mdash;while others do almost nothing.
                 In really rare cases, an avalanche can span the entire lattice, if a drop happens at the right spot.
@@ -206,9 +222,6 @@
                 You might think that eventually the pile settles down so that big avalanches become impossible at a
                 certain point. But in fact, one is always possible: the system only gets more <i>critical</i> over time.
             </p>
-        </div>
-        <div id="histogram">
-            <div id="axis"></div>
         </div>
         <span id="pause">paused</span>
         <script src="https://d3js.org/d3.v4.js"></script>
@@ -402,8 +415,6 @@
                             document.getElementById('random-start').style.display = 'block';
                         }
                     }
-
-                    document.getElementById('random-flavor').style.display = (randomGrains) ? 'block' : 'none';
                 }, 25);
             };
 
@@ -419,8 +430,8 @@
             let toppleCounts = [];
 
             document.getElementById('random').onclick = function() {
-                randomGrains = true;
                 document.getElementById('random-start').style.display = 'none';
+                randomGrains = true;
                 setInterval(function() {
                     if (counting) {
                         toppleCounts.push(toppleCount);
@@ -446,7 +457,7 @@
                 let bin_counts = bins.map(b => b.length);
                 let bin_scale = d3.max(bin_counts);
 
-                document.getElementById('histogram').style.display = 'flex';
+                document.getElementById('data-display').style.display = 'block';
                 let bars = document.querySelectorAll('#histogram .bar');
                 if (bars.length === 0) {
                     for (let i = 0; i < bins.length; i++) {
