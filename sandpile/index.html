@@ -220,6 +220,21 @@
             #buttons button:hover {
                 background-color: #eeeeee;
             }
+
+            #credit {
+                text-align: center;
+                position: absolute;
+                bottom: 5px;
+                z-index: 100;
+                width: 100vw;
+                font-family: 'Arial', sans-serif;
+                font-size: 8pt;
+            }
+
+            #credit a {
+                color: rgb(36, 130, 130);
+                text-decoration: none;
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -231,6 +246,7 @@
             <button id="zoomOut">-</button>
             <button id="zoomIn">+</button>
         </div>
+        <div id="credit">Made by <a href='http://jlin1212.github.io'>Jonathan Lin</a> in collaboration with <a href='https://www.complexityexplorer.org/#gsc.tab=0'>SFI Complexity Explorer.</a></div>
         <div id="info">
             <span class="suptitle">sandbox state:</span>
             <span class="title">saturated</span>
