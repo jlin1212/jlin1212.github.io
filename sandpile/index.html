@@ -177,21 +177,22 @@
 
             #pause {
                 position: absolute;
-                top: -15%;
+                top: 5%;
                 right: 50%;
                 transform: translateX(50%);
                 z-index: 101;
                 text-transform: uppercase;
                 font-family: 'Oswald', sans-serif;
-                font-size: 30pt;
+                font-size: 15pt;
                 transition: 0.1s linear;
                 color: white;
                 padding: 10px;
                 background-color: rgba(0, 0, 0, 0.5);
+                opacity: 0;
             }
 
             #pause.active {
-                top: 5%;
+                opacity: 1;
             }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -301,6 +302,13 @@
             const drop_mesh = new THREE.Mesh(geometry, material);
             drop_mesh.position.set(0, 200, 0);
             scene.add(drop_mesh);
+
+            const place_material = new THREE.MeshPhongMaterial({ color: 0x54b8ff });
+            place_material.transparent = true;
+            place_material.opacity = 0.6;
+            const place_mesh = new THREE.Mesh(geometry, place_material);
+            place_mesh.position.set(0, 200, 0);
+            scene.add(place_mesh);
 
             const shadow_geometry = new THREE.PlaneGeometry(2, 2);
             const shadow_material = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
@@ -495,9 +503,16 @@
                 mouse.y = evt.clientY * 2 / window.innerHeight - 1;
                 raycaster.setFromCamera(mouse, camera);
                 let intersects = raycaster.intersectObject(mesh);
+                
                 paused = intersects.length > 0;
                 if (paused) pauseIndicator.classList.add('active');
-                else pauseIndicator.classList.remove('active'); 
+                else pauseIndicator.classList.remove('active');
+
+                if (intersects.length > 0) {
+                    console.log(intersects[0])
+                    place_mesh.position.set(intersects[0].x, intersects[0].y + 1, intersects[0].z)
+                    renderer.render(scene, camera);
+                }
             }
         </script>
     </body>
