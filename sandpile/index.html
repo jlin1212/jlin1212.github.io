@@ -512,6 +512,7 @@
                 placeSelected = false;
                 place_mesh.position.set(0, 200, 0);
                 renderer.render(scene, camera);
+                sandbox.style.cursor = '';
             }
 
             sandbox.onmousemove = function(evt) {
@@ -534,6 +535,7 @@
                     placeIdx.instanceId = intersects[0].instanceId;
                     place_mesh.position.set(ix, iy + 1, iz);
                     renderer.render(scene, camera);
+                    sandbox.style.cursor = 'pointer';
                 } else hide_placement();
             }
 
