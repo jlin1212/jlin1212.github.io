@@ -130,7 +130,7 @@
             }
 
             #histogram::before {
-                content: "Histogram of Toppling Sizes";
+                content: "Log-Histogram of Toppling Sizes";
                 font-family: 'Stack Sans Headline';
                 font-weight: 400;
                 position: absolute;
@@ -461,7 +461,7 @@
 
             function render_histogram() {
                 const x = d3.scaleLinear()
-                    .domain([0, 100]);
+                    .domain([0, 1000]);
 
                 let histogram = d3.histogram()
                     .value(d => d)
@@ -470,6 +470,7 @@
 
                 let bins = histogram(toppleCounts);
                 let bin_counts = bins.map(b => b.length);
+                bin_counts = bin_counts.map(b => b === 0 ? 0 : Math.log(b))
                 let bin_scale = d3.max(bin_counts);
 
                 document.getElementById('data-display').style.display = 'block';
@@ -487,7 +488,7 @@
                     bars[i].style.height = `${Math.round(0.8*bin_counts[i]*document.getElementById('histogram').clientHeight/bin_scale)}px`;
                 }
 
-                console.log(bins);
+                console.log(bins, bin_counts);
             }
 
             window.onwheel = function(evt) {
