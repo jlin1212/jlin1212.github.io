@@ -336,7 +336,7 @@
                 }
             }
 
-            function render_drop(drop_idx) {
+            function render_drop(state_grid, drop_idx) {
                 drop_i = drop_idx[0];
                 drop_j = drop_idx[1];
                 drop_mesh.position.set(drop_i - (RES / 2), 100, drop_j - (RES / 2));
@@ -450,9 +450,9 @@
                     }
                     toppleCount = 0;
                     
-                    if (!placeSelected) {
+                    if (!placeSelected && !dropping) {
                         let drop_idx = random_site(state_grid);
-                        render_drop(drop_idx);
+                        render_drop(state_grid, drop_idx);
                         counting = true;
                     }
                 }, 4000, true);
@@ -508,6 +508,12 @@
             let placeSelected = false;
             let placeIdx = { i: null, j: null };
 
+            function hide_placement() {
+                placeSelected = false;
+                place_mesh.position.set(0, 200, 0);
+                renderer.render(scene, camera);
+            }
+
             sandbox.onmousemove = function(evt) {
                 mouse.x = evt.clientX * 2 / window.innerWidth - 1;
                 mouse.y = -(evt.clientY * 2 / window.innerHeight - 1);
@@ -525,12 +531,17 @@
                     placeSelected = true;
                     placeIdx.i = ix + (RES / 2);
                     placeIdx.j = iz + (RES / 2);
+                    placeIdx.instanceId = intersects[0].instanceId;
                     place_mesh.position.set(ix, iy + 1, iz);
                     renderer.render(scene, camera);
-                } else {
-                    placeSelected = false;
-                    place_mesh.position.set(0, 200, 0);
-                    renderer.render(scene, camera);
+                } else hide_placement();
+            }
+
+            sandbox.onmousedown = function(evt) {
+                if (placeSelected) {
+                    hide_placement();
+                    render_drop(state_grid, [placeIdx.i, placeIdx.j]);
+                    counting = true;
                 }
             }
         </script>
