@@ -498,7 +498,7 @@
                 );
                 camera.updateProjectionMatrix();
                 renderer.render(scene, camera);
-            }
+            };
 
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2(-1, -1);
@@ -514,17 +514,13 @@
                 place_mesh.position.set(0, 200, 0);
                 renderer.render(scene, camera);
                 sandbox.style.cursor = '';
-            }
+            };
 
             sandbox.onmousemove = function(evt) {
                 mouse.x = evt.clientX * 2 / window.innerWidth - 1;
                 mouse.y = -(evt.clientY * 2 / window.innerHeight - 1);
                 raycaster.setFromCamera(mouse, camera);
                 let intersects = raycaster.intersectObject(mesh);
-                
-                paused = !dropping && unstable && (intersects.length > 0);
-                if (paused) pauseIndicator.classList.add('active');
-                else pauseIndicator.classList.remove('active');
 
                 if (intersects.length > 0 && randomGrains && !paused) {
                     let ix = Math.floor(intersects[0].point.x);
@@ -538,7 +534,15 @@
                     renderer.render(scene, camera);
                     sandbox.style.cursor = 'pointer';
                 } else hide_placement();
-            }
+            };
+
+            window.onkeydown = function(evt) {
+                if (evt.keyCode === 32) {
+                    if(!dropping && unstable) paused = !paused;
+                    if (paused) pauseIndicator.classList.add('active');
+                    else pauseIndicator.classList.remove('active');
+                }
+            };
 
             sandbox.onmousedown = function(evt) {
                 if (placeSelected) {
@@ -546,7 +550,7 @@
                     render_drop(state_grid, [placeIdx.i, placeIdx.j]);
                     counting = true;
                 }
-            }
+            };
         </script>
     </body>
 </html>
