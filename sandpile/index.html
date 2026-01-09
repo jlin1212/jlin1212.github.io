@@ -606,7 +606,7 @@
 
             window.onkeydown = function(evt) {
                 if (evt.keyCode === 32) {
-                    if(!dropping && unstable) paused = !paused;
+                    if(!dropping) paused = !paused;
                     if (paused) pauseIndicator.classList.add('active');
                     else pauseIndicator.classList.remove('active');
                 }
