@@ -285,6 +285,7 @@
         </script>
         <script type="module">
             import * as THREE from 'three';
+            import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -327,6 +328,10 @@
             scene.add(light.target);
 
             const layer_colors = ['#774936', '#c38e70', '#deab90', '#dd2525'];
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.minAzimuthAngle = Math.PI / 4;
+            controls.maxAzimuthAngle = Math.PI / 4;
 
             function render(grid) {
                 let idx = 0;
