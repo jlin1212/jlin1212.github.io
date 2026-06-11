@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <title>Jon Lin's Widget Spinner</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <link rel="stylesheet" href="index.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    </head>
+    <body>
+        <div id="landing">
+            <div class="background"></div>
+            <div id="header">
+                <div class="suptitle">JON LIN'S</div>
+                <div class="title">WIDGET SPINNER</div>
+                <div class="subtitle">(vaguely educational toys and topics)</div>
+            </div>
+            <div id="spinner">
+                <div id="spinnerleft" class="control material-symbols-outlined">arrow_back_ios</div>
+                <div id="spinnerright" class="control material-symbols-outlined">arrow_forward_ios</div>
+            </div>
+        </div>
+        <div id="about">
+            <h1>about me</h1>
+            <div id="about_body">
+                <div id="pic">
+                    <img src="img/me.jpg" />
+                    <span id="caption">(pictured: some guy)</span>
+                </div>
+                <p>
+                    Hi, I'm Jonathan (Lin). <i>Professionally</i> speaking, I've been interested in the dynamics and applications of computers in all their forms, whether those be 
+                    traditional von Neumann "grocery list" Turing machines, or alt/indie styles of computing like neuromorphic, deep learning, and reservoir computers. However, I generally
+                    take thoroughly unpaid interests in nonlinear dynamics, chaos, and pattern formation - which appear in fractals, swarms, and cellular automata, among other things. Above, 
+                    I've put links to toys and other things I've made for myself and others, with some hands-on ways to poke and prod at these beautiful things to learn more about them.
+                </p>
+                <p>
+                    I have a B.S. in Computer Science from the University of Maryland, College Park, an MEng. in Bioengineering from the same, and I'm currently working in 
+                    T-4 at Los Alamos National Laboratory on neuromorphic computing using memristors and other memory materials like photorefractive crystals with 
+                    <a href="https://sites.google.com/site/francescocaravelli/">Francesco Caravelli</a>. I've also animated a course in complex dynamics with the
+                    <a href="https://www.santafe.edu/">Santa Fe Institute</a> using <a href='https://www.3blue1brown.com/'>Grant Sanderson's</a> <a href='https://github.com/3b1b/manim'>Manim</a> 
+                    library (currently pending publication).
+                </p>
+            </div>
+        </div>
+        <div id="papers">
+            <h1>papers and publications</h1>
+            <p>
+                It would be downright generous to call me an early career researcher (at the <span title="September 2024">time of writing</span>, this is my second year doing work with the intent to publish), 
+                but I do have a couple papers available on arXiv that are pending review, mainly from my year here at Los Alamos:
+                <ul>
+                    <li>
+                        <a href="https://arxiv.org/abs/2407.20539">Memristive linear algebra.</a> 
+                        <i>Jonathan Lin, Frank Barrows, Francesco Caravelli</i>
+                        <span class="blurb">
+                            <b>Full abstract:</b> A paper that explores hardware acceleration of matrix inversion, which is a very important operation used to
+                            solve systems of equations, optimization problems, and differential equations. The hardware acceleration hinges on the amazing fact that
+                            electric circuits can perform matrix-vector operations in one step (as opposed to O(N<sup>2</sup>) steps on a computer). Memristors are resistors 
+                            that change their resistance based on their history of electric current flow, which allows for unique nonlinear applications.
+                        </span>
+                        <span class="blurb">
+                            <b>TL;DR:</b> We use memristors, resistors that change their resistance in response to electric current, in electric circuits to invert matrices and solve problems quickly.
+                        </span>
+                    </li>
+                    <li>
+                        <a href="https://arxiv.org/abs/2408.05183">Uncontrolled learning: co-design of neuromorphic hardware topology for neuromorphic algorithms.</a> 
+                        <i>Frank Barrows, Jonathan Lin, Francesco Caravelli, Dante R. Chialvo</i>
+                        <span class="blurb">
+                            <b>Full abstract:</b> Here, we aim to train a hardware neural network entirely on-chip, using only electric signals applied at the inputs and outputs of the network.
+                            This is essentially learning with "minimal control" - by comparison, popular deep learning methods like backpropagation are like reaching into a brain and
+                            painstakingly modifying neurons one-by-one. We take advantage of the unique properties of memristors, exploiting the fact that 1) memristors increase their 
+                            resistance when current is passed through them and 2) that electricity follows the path of least resistance.
+                        </span>
+                        <span class="blurb">
+                            <b>TL;DR:</b> We train hardware neural networks using simple electric signals only, without complex algorithms like backpropagation.
+                        </span>
+                    </li>
+                </ul>
+            </p>
+            <p>
+                I also have another paper in progress describing my Master's research, but more on that later.
+            </p>
+        </div>
+        <div id="footer"></div>
+        <template id="spinneritem">
+            <div class="item">
+                <img class="thumbnail" />
+                <div class="info">
+                    <div class="title"></div>
+                    <div class="description"></div>
+                </div>
+            </div>
+        </template>
+    </body>
+    <script src="index.js"></script>
+</html>
