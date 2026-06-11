@@ -3,6 +3,11 @@
     src: url('/fonts/neon.ttf');
 }
 
+@font-face {
+    font-family: 'Computer Modern';
+    src: url('/fonts/cmunrm.ttf');
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -130,11 +135,11 @@ h1 {
 #about p {
     display: inline-block;
     margin-top: 2em;
-    color: rgb(179, 192, 217);
+    color: #e9ddb0;
     width: 60%;
     text-align: justify;
-    font-size: 13pt;
-    font-family: 'Google Sans', 'Arial', sans-serif;
+    font-size: 16pt;
+    font-family: 'Computer Modern', 'Arial', sans-serif;
     line-height: 1.5em;
 }
 
@@ -151,9 +156,88 @@ h1 {
 }
 
 #me span {
-    color: white;
+    font-family: 'Computer Modern', serif;
+    color: #e3d081;
     font-style: italic;
     font-size: 8pt;
     margin: 5px;
     display: inline-block;
+}
+
+#paper-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 5em;
+}
+
+#paper-crumbs {
+    display: flex;
+    padding-top: 3em;
+    gap: 8px;
+    justify-content: center;
+}
+
+#paper-crumbs .crumb {
+    background-color: #777;
+    border-radius: 50%;
+    display: block;
+    height: 8px;
+    width: 8px;
+    cursor: pointer;
+}
+
+#paper-crumbs .crumb:hover {
+    background-color: #aaa;
+}
+
+#paper-crumbs .crumb.active {
+    background-color: #eee;
+}
+
+#paper-crumbs .crumb.active:hover {
+    background-color: #eee;
+    cursor: default;
+}
+
+#paper-view {
+    height: 22em;
+    width: 17em;
+    flex: none;
+    box-shadow: 0px 2px 5px black;
+}
+
+#paper-desc {
+    font-family: 'Computer Modern', serif;
+    padding: 2em;
+    max-width: 80vw;
+}
+
+#paper-desc a, #paper-desc p {
+    text-align: left;
+    padding: 0;
+}
+
+#paper-desc a {
+    color: #e3d081;
+    font-size: 25pt;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#paper-desc a:hover {
+    text-decoration: underline;
+}
+
+#paper-desc p {
+    color: #d5d3b8;
+    padding-top: 2em;
+    text-align: justify;
+}
+
+#paper-authors {
+    font-style: italic;
+    font-size: 15pt;
+    padding-top: 0.5em !important;
 }
