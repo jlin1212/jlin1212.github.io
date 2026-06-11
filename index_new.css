@@ -15,7 +15,11 @@
 }
 
 body {
+    background-image: url('/img/bricks.svg');
     background-color: #1a2026;
+    background-position: top left;
+    background-repeat: no-repeat;
+    background-size: 20% auto;
     color: #51513d;
     font-family: 'Inter', 'Arial', sans-serif;
 }
