@@ -12,6 +12,7 @@ PAPERS = [
         consumption compared to traditional digital methods for certain matrix tasks. Furthermore, we
         address the challenges of device variability, precision, and scalability, providing insights into the
         practical implementation of these algorithms.`,
+        date: 'June 2025',
         href: 'https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.7.023241'
     },
     {
@@ -37,6 +38,7 @@ PAPERS = [
         network weights. Through combined experimental and simulation efforts, the
         parameters are identified that enable networks to exhibit emergent intelligence
         from simple rules, advancing the potential of neuromorphic computing.`,
+        date: 'March 2025',
         href: 'https://advanced.onlinelibrary.wiley.com/doi/full/10.1002/aisy.202400739'
     },
     {
@@ -53,6 +55,7 @@ PAPERS = [
         Propagation, a framework encompassing a broad class of Hebbian learning algorithms, including Coupled Learning
         and Equilibrium Propagation, and show how our algorithm compares. We demonstrate our algorithm using numerical
         simulations and show that we can train resistor networks without the need for a replica or control over all edges.`,
+        date: 'Februrary 2026',
         href: 'https://arxiv.org/abs/2602.03546'
     }
 ]
@@ -72,12 +75,41 @@ function init() {
     }
     
     for (let i = 0; i < PAPERS.length; i++) {
-        let crumb = document.createElement('div');
-        crumb.classList.add('crumb');
-        crumb.addEventListener('click', function() {
-            showPaper(i);
-        });
-        document.getElementById('paper-crumbs').appendChild(crumb);
+        let paper = document.createElement('div');
+        paper.classList.add('paper-container');
+        
+        let paperView = document.createElement('img');
+        paperView.classList.add('paper-view');
+        paperView.src = `/img/paper/${PAPERS[i].cover}`;
+        
+        let paperDesc = document.createElement('div');
+        paperDesc.classList.add('paper-desc');
+        
+        let paperDate = document.createElement('span');
+        paperDate.classList.add('paper-date');
+        paperDate.textContent = PAPERS[i].date.toLowerCase();
+
+        let paperTitle = document.createElement('a');
+        paperTitle.classList.add('paper-title');
+        paperTitle.href = PAPERS[i].href;
+        paperTitle.textContent = PAPERS[i].title;
+        
+        let paperAuthors = document.createElement('p');
+        paperAuthors.classList.add('paper-authors');
+        paperAuthors.textContent = PAPERS[i].authors;
+        
+        let paperAbstract = document.createElement('p');
+        paperAbstract.classList.add('paper-abstract');
+        paperAbstract.textContent = PAPERS[i].abstract;
+
+        paper.appendChild(paperView)
+        paperDesc.appendChild(paperDate);
+        paperDesc.appendChild(paperTitle);
+        paperDesc.appendChild(paperAuthors);
+        paperDesc.appendChild(paperAbstract);
+        paper.appendChild(paperDesc);
+
+        document.getElementById('papers').appendChild(paper)
     }
 
     document.onkeydown = function(evt) {
@@ -107,19 +139,6 @@ function flicker() {
 function hideSections() {
     document.querySelectorAll('#links .active').forEach(link => link.classList.remove('active'));
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-}
-
-function showPaper(idx) {
-    document.getElementById('paper-view').src = `/img/paper/${PAPERS[idx].cover}`;
-    document.getElementById('paper-title').href = PAPERS[idx].href;
-    document.getElementById('paper-title').textContent = PAPERS[idx].title;
-    document.getElementById('paper-authors').textContent = PAPERS[idx].authors;
-    document.getElementById('paper-abstract').textContent = PAPERS[idx].abstract;
-
-    let crumbs = document.querySelectorAll('#paper-crumbs .crumb');
-    crumbs[PAPER_IDX].classList.remove('active');
-    crumbs[idx].classList.add('active');
-    PAPER_IDX = idx;
 }
 
 function showSection(id) {

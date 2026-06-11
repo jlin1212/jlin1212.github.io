@@ -15,7 +15,6 @@
 }
 
 body {
-    background-image: url('/img/bricks.svg');
     background-color: #1a2026;
     background-position: top left;
     background-repeat: no-repeat;
@@ -168,79 +167,59 @@ h1 {
     display: inline-block;
 }
 
-#paper-container {
+.paper-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     padding: 5em;
+    padding-bottom: 0em;
 }
 
-#paper-crumbs {
-    display: flex;
-    padding-top: 3em;
-    gap: 8px;
-    justify-content: center;
-}
-
-#paper-crumbs .crumb {
-    background-color: #777;
-    border-radius: 50%;
-    display: block;
-    height: 8px;
-    width: 8px;
-    cursor: pointer;
-}
-
-#paper-crumbs .crumb:hover {
-    background-color: #aaa;
-}
-
-#paper-crumbs .crumb.active {
-    background-color: #eee;
-}
-
-#paper-crumbs .crumb.active:hover {
-    background-color: #eee;
-    cursor: default;
-}
-
-#paper-view {
+.paper-view {
     height: 22em;
     width: 17em;
     flex: none;
     box-shadow: 0px 2px 5px black;
 }
 
-#paper-desc {
+.paper-desc {
     font-family: 'Computer Modern', serif;
     padding: 2em;
     max-width: 80vw;
 }
 
-#paper-desc a, #paper-desc p {
+.paper-date {
+    font-family: 'Google Sans', sans-serif;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: block;
+    color: #e4dcce;
+}
+
+.paper-desc a, #paper-desc p {
     text-align: left;
     padding: 0;
 }
 
-#paper-desc a {
+.paper-desc a {
     color: #e3d081;
     font-size: 25pt;
     text-decoration: none;
     font-weight: bold;
 }
 
-#paper-desc a:hover {
+.paper-desc a:hover {
     text-decoration: underline;
 }
 
-#paper-desc p {
+.paper-desc p {
     color: #d5d3b8;
     padding-top: 2em;
     text-align: justify;
 }
 
-#paper-authors {
+.paper-authors {
     font-style: italic;
     font-size: 15pt;
     padding-top: 0.5em !important;
