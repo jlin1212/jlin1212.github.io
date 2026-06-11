@@ -117,3 +117,38 @@ h1 {
 #footer {
     padding: 10em;
 }
+
+#about {
+    padding: 5em;
+    text-align: center;
+}
+
+#about p {
+    display: inline-block;
+    margin-top: 1em;
+    color: rgb(179, 192, 217);
+    width: 60%;
+    text-align: left;
+    font-size: 13pt;
+    font-family: 'Inter', sans-serif;
+}
+
+#about a {
+    font-weight: bold;
+    text-decoration: none;
+    color: #a2c9f6;
+}
+
+#me {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#me span {
+    color: white;
+    font-style: italic;
+    font-size: 8pt;
+    margin: 5px;
+    display: inline-block;
+}
