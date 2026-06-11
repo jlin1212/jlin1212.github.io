@@ -125,10 +125,10 @@ h1 {
 
 #about p {
     display: inline-block;
-    margin-top: 1em;
+    margin-top: 2em;
     color: rgb(179, 192, 217);
     width: 60%;
-    text-align: left;
+    text-align: justify;
     font-size: 13pt;
     font-family: 'Inter', sans-serif;
 }
