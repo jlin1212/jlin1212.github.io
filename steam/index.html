@@ -73,11 +73,11 @@
                     \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} \\
                     \nabla\cdot\mathbf{u} &= 0 \\
                     \frac{\partial T}{\partial t} &= \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s} \\
-                    p &= p_l + H(T-T_\text{boil})(p_b - p_l) \\
-                    \mu &= \mu_l + H(T-T_\text{boil})(\mu_b - \mu_l)
+                    p &= p_l + S(T-T_\text{boil})(p_b - p_l) \\
+                    \mu &= \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l)
                 \end{align}
                 $$
-                which could be expanded into 11 equations in full form. I've neglected to consider the interfacial temperature conditions entirely here, so this simulation is more qualitative than anything, but it will look pretty boily and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
+                which could be expanded into 11 equations in full form. I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boily and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
             </p>
             <p>
                 As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here. To numerically solve these equations, all I have to do is construct a giant matrix and (pseudo)invert it.
