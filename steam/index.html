@@ -39,15 +39,13 @@
                 We represent the flow velocity as the scalar field \(\mathbf{u}\) and the density as \(\rho\). Now, in fact, assuming we have a system where all the water stays in the pot, we have the incompressible Navier-Stokes equations:
                 $$
                 \begin{align}
-                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= \rho\mathbf{F}-\nabla p + \mu\nabla^2\mathbf{u} \\
-                    \nabla\cdot\mathbf{u} &= 0
+                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= \rho\mathbf{F}-\nabla p + \mu\nabla^2\mathbf{u}
                 \end{align}
                 $$
                 where \(p\) is the pressure and \(\mu\) the viscosity. \(\mathbf F\) is the external field vector&mdash;in our case we're just going to assume that every part of the water feels a gravitational force pointing downwards that is proportional to the local density, i.e. \(\mathbf{F} = -\rho\mathbf{e}_z\) everywhere:
                 $$
                 \begin{align}
-                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} \\
-                    \nabla\cdot\mathbf{u} &= 0
+                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} 
                 \end{align}
                 $$
                 Now, as a prime example of saved effort: even though I am integrating over the entirety of the pot, when I render this I will literally just apply the velocity field to the top layer of voxels, since that's all we see and therefore care about. This will be fine as long as I keep things at a rolling boil.
@@ -71,16 +69,36 @@
                 $$
                 \begin{align}
                     \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} \\
-                    \nabla\cdot\mathbf{u} &= 0 \\
-                    \frac{\partial T}{\partial t} &= \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s} \\
+                    \frac{\partial T}{\partial t} &= \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s}
+                \end{align}
+                $$
+            </p>
+            <p>
+                We also have the state equations
+                $$
+                \begin{align}
                     p &= p_l + S(T-T_\text{boil})(p_b - p_l) \\
                     \mu &= \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l)
                 \end{align}
                 $$
-                which could be expanded into 11 equations in full form. I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boily and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
+                for the pressure and viscosity.
             </p>
             <p>
-                As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here. To numerically solve these equations, all I have to do is construct a giant matrix and (pseudo)invert it.
+                I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boily and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
+            </p>
+            <p>
+                As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here. To numerically solve these equations, all I have to do is construct a giant matrix and invert it. I'm going to be using coupled implicit finite difference:
+                $$
+                    \begin{align}
+                    \frac{\partial\mathbf{u}}{\partial t} &\approx \frac{3\mathbf{u}^{n+1}-4\mathbf{u}^n+\mathbf{u}^{n-1}}{2\Delta t} \\
+                    \frac{\partial T}{\partial t} &\approx \frac{3T^{n+1}-4T^n+T^{n-1}}{2\Delta t}
+                    \end{align}
+                $$
+                A little rearrangement is necessary for the main evolution equation:
+                $$
+                    \frac{\partial\mathbf{u}}{\partial t} = -(\mathbf{u}\cdot\nabla)\mathbf{u}-\rho\mathbf{e}_z-\frac{\nabla p}{\rho} + \frac{\mu}{\rho}\nabla^2\mathbf{u}
+                $$
+                (Note the kinematic viscosity \(\nu = \mu/\rho\).)
             </p>
         </div>
         <div class="footer"></div>
