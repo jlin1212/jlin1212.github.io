@@ -1,0 +1,46 @@
+@font-face {
+    font-family: 'Computer Modern';
+    src: url('/fonts/cmunrm.ttf');
+}
+
+body {
+    background-color: #f7f6ee;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    color: #0e1428;
+}
+
+.title {
+    text-align: center;
+    padding: 2em;
+    font-family: 'Google Sans', sans-serif;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+}
+
+.content p {
+    font-family: 'Google Sans', sans-serif;
+    font-size: 15pt;
+    width: 50vw;
+    text-align: left;
+}
+
+.footer {
+    padding: 10em;
+}
+
+a:hover {
+    font-weight: bold;
+}
+
+img {
+    border: 2px solid rgb(47, 32, 17);
+}

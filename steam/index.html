@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <title>the steam engine</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+        <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+        <link rel="stylesheet" href="steam.css" />
+    </head>
+    <body>
+        <div class="title">
+            <h1>How to build a steam engine</h1>
+        </div>
+        <div class="content">
+            <p>I've done it. I've bottled lightning: I've come up with something I call the steam engine. It took a few nights of tossing and turning, but after a while I decided it was only right to let the world know. The idea is pretty revolutionary: you boil water to move things and generate useful work&mdash;</p>
+            <p>Eh? What's that? That's <a href="https://en.wikipedia.org/wiki/James_Watt">Watt's</a>? A <a href='https://en.wikipedia.org/wiki/Thomas_Savery'>couple</a> <a href='https://en.wikipedia.org/wiki/Thomas_Newcomen'>guys</a> named Thomas beat me to the punch?
+            <p>Well, I guess I'll have to come up with my own steam engine then: at least I was a few hundred years late, so the name's in the public domain. Here's my brand new idea: how about I boil water to move things and generate useful work?</p>
+            <p>It won't be boring, useless work like spinning a magnet to generate electricity. No, I'm going to use this pot of boiling water to do things like predict the weather and recognize numbers...things usually reserved for machines with a screen and a keyboard. That's right: I'm going to turn a pot of boiling water into a literal <a href='https://en.wikipedia.org/wiki/Reservoir_computing'>reservoir computer</a>. But because I'm poor and live in California, where water <a href='https://ragingwaters.com/'>must never be used frivolously</a>, I'm going to do all of this virtually...<span title='right, ben?'>for now</span>.</p>
+            <p>So actually, what I meant was...</p>
+        </div>
+        <div class="title">
+            <h1>How to <i>simulate</i> a steam engine</h1>
+        </div>
+        <div class="content">
+            <p>
+                Now we're talking. As it turns out, simulating a pot of boiling water is actually a highly nontrivial computational task, enough that a <a href='https://www.sciencedirect.com/science/chapter/edited-volume/abs/pii/B9780080440460503894'>single bubble</a> can get you a publication. The reason is the fact that bubbles can take all sorts of twisty, complicated shapes. While they follow the same set of laws (Navier-Stokes) as good old liquid water, they're made of steam, a material with a totally different density, viscosity, and pressure than water.
+            </p>
+            <img src="https://cfdland.com/wp-content/uploads/2024/10/4-2.png" width="400" />
+            <p>
+                Solving the fluid equations means keeping track of the tangent vectors to bubbles, which can split apart and combine willy-nilly and take on all sorts of ungodly shapes (see above). My solution? Rather than assuming a spherical cow, I'm going to assume square bubbles. That's right&mdash;I'm going to approximate my pot of boiling water as a set of voxels, each of which are either steam or liquid at a given moment.
+            </p>
+            <p>
+                To be sure, this is about as good as a sketch of a sketch, but it's chaotic, and that's what really matters for a reservoir computer. Let's start!
+            </p>
+            <p>
+                The first thing to note is that I haven't really made my life too much easier. This is still a multiphysics simulation: I need to simulate the heat transfer from the burners to the water via the pot, the change in phase from gas to liquid, the movement of liquid water, and the interaction between gaseous and liquid water. For the first two effects I'll just use Laplace heat transfer; for the rest, I'll have to discretize the Navier-Stokes equations. When the temperature of a voxel exceeds some threshold, I will say it has turned to gas.
+            </p>
+            <p>
+                We represent the flow velocity as the scalar field \(\mathbf{u}\) and the density as \(\rho\). Now, in fact, assuming we have a system where all the water stays in the pot, we have the incompressible Navier-Stokes equations:
+                $$
+                \begin{align}
+                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= \rho\mathbf{F}-\nabla p + \mu\nabla^2\mathbf{u} \\
+                    \nabla\cdot\mathbf{u} &= 0
+                \end{align}
+                $$
+                where \(p\) is the pressure and \(\mu\) the viscosity. \(\mathbf F\) is the external field vector&mdash;in our case we're just going to assume that every part of the water feels a gravitational force pointing downwards that is proportional to the local density, i.e. \(\mathbf{F} = -\rho\mathbf{e}_z\) everywhere:
+                $$
+                \begin{align}
+                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} \\
+                    \nabla\cdot\mathbf{u} &= 0
+                \end{align}
+                $$
+                We now need to couple these equations to the heat input from the burners, which are governed by the Laplace equation.
+            </p>
+        </div>
+        <div class="footer"></div>
+    </body>
+</html>
