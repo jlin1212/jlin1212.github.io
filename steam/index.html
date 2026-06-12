@@ -60,11 +60,11 @@
                 where \(T\) is the temperature of the liquid, \(D\) the diffusivity, and \(\mathbf{s}\) a time-varying scalar field source term for input heat (aka our burners). More on the exact form of \(\mathbf{s}\) later.
             </p>
             <p>
-                All that remains is to relate the temperature of the water to its pressure \(p\) and viscosity \(\mu\), which is to say its phase. Continuing my caveman approximation, I say that above some threshold \(T_\text{boil}\), the phase of the water is steam; otherwise, it is liquid. For now, let's call the boiling pressure \(p_b\) and the liquid pressure \(p_l\); likewise define \(\mu_b,\mu_l\). Then given the Heaviside step function \(H\), I define
+                All that remains is to relate the temperature of the water to its pressure \(p\) and viscosity \(\mu\), which is to say its phase. Continuing my caveman approximation, I say that above some threshold \(T_\text{boil}\), the phase of the water is steam; otherwise, it is liquid. For now, let's call the boiling pressure \(p_b\) and the liquid pressure \(p_l\); likewise define \(\mu_b,\mu_l\). Then I define the sigmoidal transition from liquid to boiling:
                 $$
-                    p = p_l + H(T-T_\text{boil})(p_b - p_l) \qquad \mu = \mu_l + H(T-T_\text{boil})(\mu_b - \mu_l)
+                    p = p_l + S(T-T_\text{boil})(p_b - p_l) \qquad \mu = \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l)
                 $$
-                In other words, it's as I said: every voxel is either steam or gas, as determined by temperature.
+                where the sigmoid function is \(S(x) = \frac{1}{1 + e^{-\alpha x}}\) for some scale \(\alpha\).In other words, it's as I said: every voxel is either steam or gas, as determined by temperature.
             </p>
             <p>
                 So, our final set of coupled equations is:
