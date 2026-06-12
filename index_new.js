@@ -3,15 +3,16 @@ PAPERS = [
         cover: 'PhysRevResearch.7.023241.png',
         title: 'Memristive linear algebra',
         authors: 'Jonathan Lin, Frank Barrows, Francesco Caravelli',
-        abstract: `The advent of memristive devices offers a promising avenue for efficient and scalable analog
-        computing, particularly for linear algebra operations essential in various scientific and engineering
-        applications. This paper investigates the potential of memristive crossbars in implementing matrix
-        inversion algorithms. We explore both static and dynamic approaches, emphasizing the advantages of 
-        analog and in-memory computing for matrix operations beyond multiplication. Our results
-        demonstrate that memristive arrays can significantly reduce computational complexity and power
-        consumption compared to traditional digital methods for certain matrix tasks. Furthermore, we
-        address the challenges of device variability, precision, and scalability, providing insights into the
-        practical implementation of these algorithms.`,
+        abstract: `The advent of memristive devices offers a promising avenue for efficient and scalable analog computing,
+        particularly for linear algebra operations essential in various scientific and engineering applications. This paper
+        investigates the potential of memristive crossbars in implementing matrix inversion algorithms. We explore both
+        static and dynamic approaches, emphasizing the advantages of analog and in-memory computing for matrix
+        operations beyond multiplication. In particular, we demonstrate that the electrical properties of memristive
+        crossbars uniquely suit them for the evolution of a family of matrix exponentials, which can be exploited for
+        the efficient computation of matrix inverses and online solutions for linear problems. Our results demonstrate
+        that memristive arrays can reduce computational complexity. We also study power consumption and show a
+        tradeoff between precision and energy. Furthermore, we address the challenges of device variability, precision,
+        and scalability, providing insights into the practical implementation of these algorithms.`,
         date: 'June 2025',
         href: 'https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.7.023241'
     },
