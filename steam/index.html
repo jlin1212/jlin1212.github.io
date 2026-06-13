@@ -129,11 +129,17 @@
         <div class="content">
             <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple. In this case we have the up-down vector \(\mathbf{e}_y\) and the left-right vector \(\mathbf{e}_x\), which are standard basis vectors.</p>
             <p>
-                The only thing I need to specify is my force field. I'll assume that wherever I have a burner, there exists a vector field pointing upwards. In addition, I have the force of gravity everywhere, \(-g\mathbf{e}_y\). Let the locations of the burners be \(\mathbf{b}_0,\ldots,\mathbf{b}_i\). The equation for the external force is then
+                We want to compute a mapping from \([0,I_\max]^\ell \to [O_\min,O_\max]^m\), where \(I_\max\) is the maximum burner output intensity and \(O_\min,O_\max\) are the minimum and maximum water offsets at the pot surface.
+            </p>
+            <p>
+                The only thing I need to specify is my force field. I'll assume that wherever I have a burner, there exists a Gaussian force pointing upwards. Let the locations of the burners be \(\mathbf{b}_0,\ldots,\mathbf{b}_p\). The equation for the external force is then
                 \begin{equation}
-                    \mathbf{F}^n(\mathbf{x}) = \left(\sum_i\mathbf{e}_y\mathbf{X}_{i,n} e^{-|(\mathbf{x}-\mathbf{b}_i)|^2/\sigma^2}\right) - g\mathbf{e}_y
+                    \mathbf{F}^n(\mathbf{x}) = \sum_{i=0}^{\ell-1}\mathbf{e}_y\mathbf{s}^n_i e^{-|(\mathbf{x}-\mathbf{b}_i)|^2/\sigma^2}
                 \end{equation}
-                with some constant \(\sigma\) controlling the spread of the input force. The sample matrix \(\mathbf{X}^n_i\) is a set of discrete samples from some input signal.
+                with some constant \(\sigma\) roughly proportional to the burner radius. \(\mathbf{s}^n_i\) represents the intensity of the \(i\)-th burner at timestep \(n\) and is controlled externally.
+            </p>
+            <p>
+                To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\).
             </p>
             <canvas class="plot" id="initial"></canvas>
         </div>
