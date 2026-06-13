@@ -34,6 +34,10 @@
             <p>
                 As much as I would like to fully solve the two-phase model and reproduce cavitation&mdash;the formation of bubbles&mdash;I'm trying to make a demo that will run in the browser. Cavitation problems are hilariously expensive and we'd be here for several days just waiting for a bubble to form. So instead, I'm going to use what are known as stochastic Navier-Stokes models: the chaos comes from random noise rather than numerical precision. This is going to save me a lot of integration time, and also be much more stable.
             </p>
+            <p>So actually, what I meant was...</p>
+            <div class="title">
+                <h1>How to <i>simulate</i> a water engine</h1>
+            </div>
             <p>
                 We start with the incompressible Navier-Stokes flow equations. <i>Now, wait</i>, you might say, <i>isn't steam one of the most compressible things around?</i> You'd be right to say so, but the compressible flow equations are also quite expensive to simulate. Instead, what we will mostly model here is the transport of pressure waves in a liquid, so technically the pre-boiling convective waves. First, the deterministic incompressible flow equations are
                 $$
@@ -148,7 +152,7 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 One more potential problem! What happens when \(\mathbf{k} = \mathbf{0}\)? In this case we take \(\mathbb{P}=\mathbf{I}\). We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>
         </div>
-        <div class="title"><h1>What it looks like to simulate a steam engine</h1></div>
+        <div class="title"><h1>What it looks like to simulate a water engine</h1></div>
         <div class="content">
             <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple. In this case we have the up-down vector \(\mathbf{e}_y\) and the left-right vector \(\mathbf{e}_x\), which are standard basis vectors.</p>
             <p>
@@ -162,8 +166,9 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 with some constant \(\sigma\) roughly proportional to the burner radius. \(\mathbf{s}^n_i\) represents the intensity of the \(i\)-th burner at timestep \(n\) and is controlled externally.
             </p>
             <p>
-                To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\).
+                To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\). The only other variable I have to define is \(\mathbf{u}^0 = \mathbf{0}\), and I'm set to simulate. Thanks to the wonderful <a href='https://numpyts.dev/'>numpy-ts</a>, I'm able to reuse all my favorite broadcasting tricks, etc. right here in the browser!
             </p>
+            <p>Let's see what we get.</p>
             <canvas class="plot" id="initial"></canvas>
         </div>
         <div class="footer"></div>
