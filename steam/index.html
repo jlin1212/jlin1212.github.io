@@ -41,7 +41,7 @@
                     \nabla\cdot\mathbf{u} &= 0
                 \end{align}
                 $$
-                which are the momentum and continuity equations respectively. Normally the external force field is just gravity, \(\mathbf{g}\), but I'm going to input heat-induced expansion in this term at the bottom of the pot. In addition, we have the no-slip boundary condition that \(\mathbf{u} = 0\) on all boundaries of the pot but the very top. Finally, we assume constant kinematic density.
+                which are the momentum and continuity equations respectively. Normally the external force field is just gravity, \(\mathbf{g}\), but I'm going to input heat-induced expansion in this term at the bottom of the pot. Finally, we assume constant kinematic density.
             </p>
             <p>
                 Now we add our noise term. The most straightforward method is to just straight-up add noise to the momentum equation, so that all previous assumptions we end up with
@@ -122,12 +122,19 @@
                 \begin{align}
                     \overline{\mathbf{u}}^{(n+1)} = \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]\left(\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\overline{\mathbf{F}}^n\right)+\xi\right)
                 \end{align}
-                We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
+                One more potential problem! What happens when \(\mathbf{k} = \mathbf{0}\)? In this case we take \(\mathbb{P}=\mathbf{I}\). We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>
         </div>
         <div class="title"><h1>What it looks like to simulate a steam engine</h1></div>
         <div class="content">
-            <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple.</p>
+            <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple. In this case we have the up-down vector \(\mathbf{e}_y\) and the left-right vector \(\mathbf{e}_x\), which are standard basis vectors.</p>
+            <p>
+                The only thing I need to specify is my force field. I'll assume that wherever I have a burner, there exists a vector field pointing upwards. In addition, I have the force of gravity everywhere, \(-g\mathbf{e}_y\). Let the locations of the burners be \(\mathbf{b}_0,\ldots,\mathbf{b}_i\). The equation for the external force is then
+                \begin{equation}
+                    \mathbf{F}^n(\mathbf{x}) = \left(\sum_i\mathbf{e}_y\mathbf{X}_{i,n} e^{-|(\mathbf{x}-\mathbf{b}_i)|^2/\sigma^2}\right) - g\mathbf{e}_y
+                \end{equation}
+                with some constant \(\sigma\) controlling the spread of the input force. The sample matrix \(\mathbf{X}^n_i\) is a set of discrete samples from some input signal.
+            </p>
             <canvas class="plot" id="initial"></canvas>
         </div>
         <div class="footer"></div>
