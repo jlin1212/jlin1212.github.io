@@ -65,6 +65,6 @@ blockquote {
     font-size: 10pt;
     padding: 1em;
     box-sizing: border-box;
-    white-space: preserve nowrap;
+    white-space: pre;
     overflow-x: auto;
 }
