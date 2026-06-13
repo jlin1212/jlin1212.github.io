@@ -115,14 +115,14 @@
                 In Python, for a simulation in a \(L \times L \times L\) domain, this would be something like
             </p>
             <blockquote>
-                u_bar = np.fft.fftn(u_real, axes=[0,1,2])                          # (L, L, L, 3)
-                kspace = np.fft.fftfreq(L)                                         # (L,)
-                kx, ky, kz = np.meshgrid(*[kspace]*3)                              # (L, L, L) x 3
-                kvecs = np.stack([kx,ky,kz], axis=3)                               # (L, L, L, 3)
-                nabla_u_bar = 1j * np.einsum('...i,...j->...ij', u_bar, kvecs)     # (L, L, L, 3, 3)
-                nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=[0,1,2])             # (L, L, L, 3, 3)
-                convect_real = np.einsum('...i,...ij->...j', u_real, nabla_u_real) # (L, L, L, 3)
-                convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3)
+u_bar = np.fft.fftn(u_real, axes=[0,1,2])                          # (L, L, L, 3)
+kspace = np.fft.fftfreq(L)                                         # (L,)
+kx, ky, kz = np.meshgrid(*[kspace]*3)                              # (L, L, L) x 3
+kvecs = np.stack([kx,ky,kz], axis=3)                               # (L, L, L, 3)
+nabla_u_bar = -1j * np.einsum('...i,...j->...ij', u_bar, kvecs)    # (L, L, L, 3, 3)
+nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=[0,1,2])             # (L, L, L, 3, 3)
+convect_real = np.einsum('...i,...ij->...j', u_real, nabla_u_real) # (L, L, L, 3)
+convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3)
             </blockquote>
             <p>(Hope you appreciate me annotating the shapes.)</p>
             <p>
