@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <title>the steam engine</title>
@@ -36,7 +37,7 @@
                 The first thing to note is that I haven't really made my life too much easier. This is still a multiphysics simulation: I need to simulate the heat transfer from the burners to the water via the pot, the change in phase from gas to liquid, the movement of liquid water, and the interaction between gaseous and liquid water. For the first two effects I'll just use Laplace heat transfer; for the rest, I'll have to discretize the Navier-Stokes equations. When the temperature of a voxel exceeds some threshold, I will say it has turned to gas.
             </p>
             <p>
-                We represent the flow velocity as the scalar field \(\mathbf{u}\) and the density as \(\rho\). Now, in fact, assuming we have a system where all the water stays in the pot, we have the incompressible Navier-Stokes equations:
+                We represent the flow velocity as the vector field \(\mathbf{u}\) and the density as \(\rho\). Now, in fact, assuming we have a system where all the water stays in the pot, we have the incompressible Navier-Stokes equations:
                 $$
                 \begin{align}
                     \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= \rho\mathbf{F}-\nabla p + \mu\nabla^2\mathbf{u}
@@ -58,17 +59,20 @@
                 where \(T\) is the temperature of the liquid, \(D\) the diffusivity, and \(\mathbf{s}\) a time-varying scalar field source term for input heat (aka our burners). More on the exact form of \(\mathbf{s}\) later.
             </p>
             <p>
-                All that remains is to relate the temperature of the water to its pressure \(p\) and viscosity \(\mu\), which is to say its phase. Continuing my caveman approximation, I say that above some threshold \(T_\text{boil}\), the phase of the water is steam; otherwise, it is liquid. For now, let's call the boiling pressure \(p_b\) and the liquid pressure \(p_l\); likewise define \(\mu_b,\mu_l\). Then I define the sigmoidal transition from liquid to boiling:
+                All that remains is to relate the temperature of the water to its pressure \(p\) and viscosity \(\mu\), which is to say its phase. Continuing my caveman approximation, I say that above some threshold \(T_\text{boil}\), the phase of the water is steam; otherwise, it is liquid. For now, let's call the boiling pressure \(p_b\) and the liquid pressure \(p_l\); I also define similar quantities for \(\mu\). Then I define the sigmoidal transition from liquid to boiling:
                 $$
-                    p = p_l + S(T-T_\text{boil})(p_b - p_l) \qquad \mu = \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l)
+                \begin{align}
+                    p &= p_l + S(T-T_\text{boil})(p_b - p_l) \\
+                    \mu &= \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l) \\
+                \end{align}
                 $$
-                where the sigmoid function is \(S(x) = \frac{1}{1 + e^{-\alpha x}}\) for some scale \(\alpha\).In other words, it's as I said: every voxel is either steam or gas, as determined by temperature.
+                where the sigmoid function is \(S(x) = \frac{1}{1 + e^{-\alpha x}}\) for some scale \(\alpha\).In other words, it's as I said: every voxel is either steam or gas, as determined by temperature. Incidentally, I assume the very simple relationship \(\rho = p/T\).
             </p>
             <p>
                 So, our final set of coupled equations is:
                 $$
                 \begin{align}
-                    \frac{\partial\mathbf{u}}{\partial t} &= -(\mathbf{u}\cdot\nabla)\mathbf{u}-\rho\mathbf{e}_z-\frac{\nabla p}{\rho} + \nu\nabla^2\mathbf{u} \\
+                    \frac{\partial\mathbf{u}}{\partial t} &= -(\mathbf{u}\cdot\nabla)\mathbf{u}-\frac{p\mathbf{e}_z}{T}-\frac{T\nabla p}{p} + \nu\nabla^2\mathbf{u} \\
                     \frac{\partial T}{\partial t} &= \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s}
                 \end{align}
                 $$
@@ -85,12 +89,27 @@
                 for the pressure and viscosity.
             </p>
             <p>
-                I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boily and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
+                I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boil-like and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
             </p>
             <p>
-                As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here.
+                As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here. This is because I can use the finite difference method to integrate these equations. To save computational power (I want this to run in real-time) I will just integrate the equations explicitly. This means that I literally just compute the spatial derivatives as seen above and treat them as time derivatives, which I add to my current stored state \(\mathbf{u}\). This type of extremely simple explicit forward integration is known as Euler integration, but it actually works quite well for what I am doing.
             </p>
+            <p>
+                Of course, I assume that \(\mathbf{u}(t=0) = \mathbf{0}\) everywhere. I won't say too much about the numerical integration itself because it's fairly straightforward, but as always I find it cool that taking \(\nabla\mathbf{u}\) returns a matrix field (a tensor) rather than a vector field. Man, that's awesome. Anyway, time to show some results!
+            </p>
+        </div>
+        <div class="title"><h1>What it looks like to simulate a steam engine</h1></div>
+        <div class="content">
+            <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple.</p>
+            <p>To begin, I'm just going to simulate the effect of a simple sinusoidal heat distribution on the base of the domain, i.e. a distribution for which we have
+            $$
+                \mathbf{s}(x,y) = \sin(x)
+            $$
+            if and only if \(y = 0\).
+            </p>
+            <canvas class="plot" id="initial"></canvas>
         </div>
         <div class="footer"></div>
     </body>
+    <script type="module" src="steam.js"></script>
 </html>
