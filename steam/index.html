@@ -34,31 +34,31 @@
                 As much as I would like to fully solve the two-phase model and reproduce cavitation&mdash;the formation of bubbles&mdash;I'm trying to make a demo that will run in the browser. Cavitation problems are hilariously expensive and we'd be here for several days just waiting for a bubble to form. So instead, I'm going to use what are known as stochastic Navier-Stokes models: the chaos comes from random noise rather than numerical precision. This is going to save me a lot of integration time, and also be much more stable.
             </p>
             <p>
-                We start with the incompressible flow equations for Navier-Stokes. <i>Now, wait</i>, you might say, <i>isn't steam one of the most compressible things around?</i> You'd be right to say so, but the compressible flow equations are also quite expensive to simulate. Instead, what we will mostly model here is the transport of pressure waves in a liquid, so technically the pre-boiling convective waves. First, the deterministic incompressible flow equations are
+                We start with the incompressible Navier-Stokes flow equations. <i>Now, wait</i>, you might say, <i>isn't steam one of the most compressible things around?</i> You'd be right to say so, but the compressible flow equations are also quite expensive to simulate. Instead, what we will mostly model here is the transport of pressure waves in a liquid, so technically the pre-boiling convective waves. First, the deterministic incompressible flow equations are
                 $$
                 \begin{align}
                     \frac{\partial\mathbf{u}}{\partial t} &= \nu\nabla^2\mathbf{u} -(\mathbf{u}\cdot\nabla)\mathbf{u} - \frac{\nabla p}{\rho} + \frac{\mathbf{F}}{\rho}\qquad \\
                     \nabla\cdot\mathbf{u} &= 0
                 \end{align}
                 $$
-                which are the momentum and continuity equations respectively. Normally the external force field is just gravity, \(\mathbf{g}\), but I'm going to input heat-induced expansion in this term at the bottom of the pot. In addition, we have the no-slip boundary condition that \(\mathbf{u} = 0\) on all boundaries of the pot but the very top.
+                which are the momentum and continuity equations respectively. Normally the external force field is just gravity, \(\mathbf{g}\), but I'm going to input heat-induced expansion in this term at the bottom of the pot. In addition, we have the no-slip boundary condition that \(\mathbf{u} = 0\) on all boundaries of the pot but the very top. Finally, we assume constant kinematic density.
             </p>
             <p>
-                To accomodate the formation of small bubbles, now we add our noise term. The most straightforward method is to just straight-up add noise to the momentum equation, so that we end up with
+                Now we add our noise term. The most straightforward method is to just straight-up add noise to the momentum equation, so that all previous assumptions we end up with
                 $$
                 \begin{align}
-                    \frac{\partial\mathbf{u}}{\partial t} &= \nu\nabla^2\mathbf{u} -(\mathbf{u}\cdot\nabla)\mathbf{u} - \frac{\nabla p}{\rho} + \frac{\mathbf{F}}{\rho} + \mathbf{\xi}\qquad \\
+                    \frac{\partial\mathbf{u}}{\partial t} &= \nu\nabla^2\mathbf{u} -(\mathbf{u}\cdot\nabla)\mathbf{u} - \nabla p + \mathbf{F} + \mathbf{\xi}\qquad \\
                     \nabla\cdot\mathbf{u} &= 0
                 \end{align}
                 $$
                 with our Gaussian white noise vector field \(\mathbf{\xi}\).
             </p>
             <p>
-                As a final constraint, taking the divergence of the momentum equation allows us to derive the commonly-used constraint \(\nabla^2 p = -\rho\nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u}\). Now, in the simplest finite difference approximation of the time derivative we have
+                As a final constraint, taking the divergence of the momentum equation allows us to derive the commonly-used constraint \(\nabla^2 p = -\nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u})\). Now, in the simplest finite difference approximation of the time derivative we have
                 \begin{align}
-                    \mathbf{u}^{(n+1)} &= \mathbf{u}^n + \Delta t\left(\nu\nabla^2\mathbf{u}^n -(\mathbf{u}\cdot\nabla)\mathbf{u}^n - \frac{\nabla p^n}{\rho} + \frac{\mathbf{F}^n}{\rho} + \mathbf{\xi}\right)\qquad \\
+                    \mathbf{u}^{(n+1)} &= \mathbf{u}^n + h\left(\nu\nabla^2\mathbf{u}^n -(\mathbf{u}\cdot\nabla)\mathbf{u}^n - \nabla p^n + \mathbf{F}^n + \mathbf{\xi}\right)\qquad \\
                     0 &= \nabla\cdot\mathbf{u}^n \\
-                    0 &= -\nabla^2 p^n -\rho\nabla\cdot(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n
+                    0 &= -\nabla^2 p^n -\nabla\cdot(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n
                 \end{align}
                 If we take \(\mathbf{u}^0(\mathbf{x}) = \mathbf{0}\), then \(p^0(\mathbf{x}) = 0\), and the resulting sequence is found iteratively.
             </p>
@@ -68,7 +68,16 @@
                     \overline{\mathbf{u}}(\mathbf{k}) &= \int_\Omega \mathbf{u}(\mathbf{x}) e^{-i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{x} \\
                     \mathbf{u}(\mathbf{x}) &= \int_\Omega \overline{\mathbf{u}}(\mathbf{k}) e^{i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{k}
                 \end{align}
-                I represent the Fourier transform of \(\mathbf{u}\) as \(\overline{\mathbf{u}}\) (blame my E&M professor). We likewise have \(\overline{\mathbf{F}}\) and \(\overline{p}\), though note that \(\hat{p}(\mathbf{k})\) is a scalar-valued multivariable function. Since the <a href="https://mathworld.wolfram.com/FourierTransformGaussian.html">Fourier transform of a Gaussian is a Gaussian</a>, we just keep \(\xi\) as-is.
+                I represent the Fourier transform of \(\mathbf{u}\) as \(\overline{\mathbf{u}}\) (blame my E&M professor). We likewise have \(\overline{\mathbf{F}}\) and \(\overline{p}\). Since the <a href="https://mathworld.wolfram.com/FourierTransformGaussian.html">Fourier transform of a Gaussian is a Gaussian</a>, we just keep \(\xi\) as-is.
+            </p>
+            <p>
+                The following identities hold for derivative operators in Fourier space:
+                \begin{align}
+                    \overline{\nabla\mathbf{u}} &= -i\mathbf{k}\otimes\overline{\mathbf{u}} \\
+                    \overline{\nabla^2\mathbf{u}} &= \overline{\nabla\cdot\nabla\mathbf{u}} = -i\mathbf{k}\cdot(-i\mathbf{k}\otimes\mathbf{u}) = -(\mathbf{k}\cdot\mathbf{k})\overline{\mathbf{u}} = -i|\mathbf{k}|^2\mathbf{u} \\
+                    \overline{\nabla\cdot\mathbf{u}} &= -i\mathbf{k}\cdot\overline{\mathbf{u}} \\
+                \end{align}
+                Here \(\otimes\) denotes the outer product. These will be useful in what comes next...
             </p>
             <p>
                 I want to show the derivation of the convective term in 3D Fourier space, because I think it's pretty cool. We have
@@ -85,19 +94,27 @@
                 \begin{align}
                     \overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}(\mathbf{k}) = \int_\Omega\left(\iint_{\Omega \times \Omega} i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}_2\otimes\overline{\mathbf{u}}(\mathbf{k}_2))\right] \,d\mathbf{k}_1\,d\mathbf{k}_2\right)\,d\mathbf{k}
                 \end{align}
-                All terms of the integrand now satisfy \(\mathbf{k}_2 = \mathbf{k} - \mathbf{k}_1\), so we can now write the single integral
+                All terms of the integrand now satisfy \(\mathbf{k}_2 = \mathbf{k} - \mathbf{k}_1\), so we can write the single integral
                 \begin{align}
                     \overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}(\mathbf{k}) &= \int_\Omega i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot((\mathbf{k}-\mathbf{k}_1)\otimes\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1))\right] \,d\mathbf{k}_1 \\
                     &= \int_\Omega i(\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}-\mathbf{k}_1))\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1) \,d\mathbf{k}_1 \\
                     &= \int_\Omega (\overline{\mathbf{u}}(\mathbf{k}_1)\cdot i(\mathbf{k}-\mathbf{k}_1))\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1) \,d\mathbf{k}_1
                 \end{align}
-                where I used the contraction identity \(\mathbf{a}(\mathbf{b}\otimes\mathbf{c}) = (\mathbf{a}\cdot\mathbf{b})\mathbf{c}\). The result is pretty interesting: it's not often that we see an equation where you transform into Fourier space with the goal of convolving in there (rather than multiplying).
+                where I used the contraction identity \(\mathbf{a}\cdot(\mathbf{b}\otimes\mathbf{c}) = (\mathbf{a}\cdot\mathbf{b})\mathbf{c}\). The result is pretty interesting: it's not often that we see an equation where you transform into Fourier space with the goal of convolving in there (rather than multiplying).
             </p>
             <p>
-                All that remains now is to find the form of each operator in Fourier space. First we have
-                \begin{equation}
-                    \frac{d\overline{\mathbf{u}}}{dt} = 
-                \end{equation}
+                In Fourier space, then, our system is described by
+                \begin{align}
+                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + ih\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}+i\mathbf{k}\overline{p}^n+\overline{\mathbf{F}}^n+\xi\right) \\
+                    0 &= i\mathbf{k}\cdot\overline{\mathbf{u}}
+                \end{align}
+                (Unfortunately I'm not doing anything here with \(i\hbar\), as cool as that would be.)
+
+                Why did I omit the pressure constraint? Now that I've done this transform, we can solve for it directly:
+                $$
+                    \overline{p}^n = -\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}})}{|\mathbf{k}|^2}
+                $$
+                We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>
         </div>
         <div class="title"><h1>What it looks like to simulate a steam engine</h1></div>
