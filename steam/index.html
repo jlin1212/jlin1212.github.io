@@ -68,7 +68,7 @@
                     \overline{\mathbf{u}}(\mathbf{k}) &= \int_\Omega \mathbf{u}(\mathbf{x}) e^{-i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{x} \\
                     \mathbf{u}(\mathbf{x}) &= \int_\Omega \overline{\mathbf{u}}(\mathbf{k}) e^{i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{k}
                 \end{align}
-                I represent the Fourier transform of \(\mathbf{u}\) as \(\overline{\mathbf{u}}\) (blame my E&M professor). We likewise have \(\overline{\mathbf{F}}\) and \(\overline{p}\). Since the <a href="https://mathworld.wolfram.com/FourierTransformGaussian.html">Fourier transform of a Gaussian is a Gaussian</a>, we just keep \(\xi\) as-is.
+                I represent the Fourier transform of \(\mathbf{u}\) as \(\overline{\mathbf{u}}\). We likewise have \(\overline{\mathbf{F}}\) and \(\overline{p}\). Since the <a href="https://mathworld.wolfram.com/FourierTransformGaussian.html">Fourier transform of a Gaussian is a Gaussian</a>, we just keep \(\xi\) as-is.
             </p>
             <p>
                 The following identities hold for derivative operators in Fourier space:
@@ -105,15 +105,23 @@
             <p>
                 In Fourier space, then, our system is described by
                 \begin{align}
-                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + ih\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}+i\mathbf{k}\overline{p}^n+\overline{\mathbf{F}}^n+\xi\right) \\
-                    0 &= i\mathbf{k}\cdot\overline{\mathbf{u}}
+                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}+i\mathbf{k}\overline{p}^n+\overline{\mathbf{F}}^n+\xi\right) \\
+                    0 &= i\mathbf{k}\cdot\overline{\mathbf{u}}^n
                 \end{align}
-                (Unfortunately I'm not doing anything here with \(i\hbar\), as cool as that would be.)
-
                 Why did I omit the pressure constraint? Now that I've done this transform, we can solve for it directly:
                 $$
-                    \overline{p}^n = -\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}})}{|\mathbf{k}|^2}
+                    \overline{p}^n = -\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n})}{|\mathbf{k}|^2}
                 $$
+                Might as well sub it in, right? Now we just have a single equation:
+                \begin{align}
+                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}-i\mathbf{k}\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
+                    &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\frac{\mathbf{k}(\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
+                    &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\underbrace{\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]}_\text{$\mathbb{P}$}\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\ldots+\xi\right)
+                \end{align}
+                Notice the appearance of the famous Leray projector, \(\mathbb{P}\). Wait a minute, what happened to our external force field \(\overline{\mathbf{F}}^n\)? It turns out that customarily part of the input force is absorbed into the pressure in order to make it divergence free, something we can also do using \(\mathbb{P}\):
+                \begin{align}
+                    \overline{\mathbf{u}}^{(n+1)} = \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]\left(\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\overline{\mathbf{F}}^n\right)+\xi\right)
+                \end{align}
                 We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>
         </div>
