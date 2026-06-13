@@ -45,3 +45,25 @@ a:hover {
 img {
     border: 2px solid rgb(47, 32, 17);
 }
+
+ol {
+    font-family: 'Google Sans', sans-serif;
+    width: 45vw;
+    font-size: 15pt;
+}
+
+code {
+    font-family: 'Google Sans Code', 'Consolas', monospace;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+blockquote {
+    background-color: rgba(0, 0, 0, 0.1);
+    display: block;
+    width: 50vw;
+    font-family: 'Google Sans Code', 'Consolas', monospace;
+    font-size: 10pt;
+    padding: 1em;
+    box-sizing: border-box;
+    white-space: pre-line;
+}

@@ -22,6 +22,11 @@ function renderArray(canvasId, array) {
             ctx.fillRect(pixelWidth * j, pixelWidth * i, pixelWidth, pixelWidth);
         }
     }
+
+    let code_blocks = document.getElementsByTagName('blockquote');
+    for (let i = 0; i < code_blocks.length; i++) {
+        code_blocks[i].textContent = code_blocks[i].textContent.trim();
+    }
 }
 
 function sigmoid(x) {

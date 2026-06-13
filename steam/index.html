@@ -5,6 +5,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
         <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
         <link rel="stylesheet" href="steam.css" />
     </head>
@@ -102,6 +103,28 @@
                 \end{align}
                 where I used the contraction identity \(\mathbf{a}\cdot(\mathbf{b}\otimes\mathbf{c}) = (\mathbf{a}\cdot\mathbf{b})\mathbf{c}\). The result is pretty interesting: it's not often that we see an equation where you transform into Fourier space with the goal of convolving in there (rather than multiplying).
             </p>
+            <p>Since this term is extremely important, I will briefly describe what computing it entails:</p>
+            <ol>
+                <li>First, of course, we compute the Fourier transform \(\overline{\mathbf{u}}\).</li>
+                <li>Next, to compute the gradient, we take the \(\mathbf{k}\)-field, which should have the same shape as \(\mathbf{u}\), and take the outer product \(\mathbf{ik}_{ij} \otimes \overline{\mathbf{u}}_{ij}\). In <code>einsum</code> index notation this is the operation <code>...i,...j->...ij</code>.</li>
+                <li>Finally, we wish to convolve the vector field \(\overline{\mathbf{u}}\) with the matrix field \(\overline{\nabla\mathbf{u}}\). One way to do so is to first compute <code>...i,...kmn->ki</code> to get every possible pair of matrix-vector products. Then, compute <code>...ij->j</code> to contract over all of them.</li>
+            </ol>
+            <p>
+                While this would obviously work, it's insanely expensive. The list above is probably better-interpreted as a way to get intuition for what the integral actually means. In practice, given \(\overline{\mathbf{u}}, \overline{\nabla\mathbf{u}}\), it's actually cheaper to transform back into coordinate space and just directly compute \((\mathbf{u}\cdot\nabla)\mathbf{u}\), then transform back into Fourier space. Each FFT only costs \(\mathcal{O}(N\log N)\), so this makes a lot more sense!
+
+                In Python, for a simulation in a \(L \times L \times L\) domain, this would be something like
+            </p>
+            <blockquote>
+                u_bar = np.fft.fftn(u_real, axes=[0,1,2])                          # (L, L, L, 3)
+                kspace = np.fft.fftfreq(L)                                         # (L,)
+                kx, ky, kz = np.meshgrid(*[kspace]*3)                              # (L, L, L) x 3
+                kvecs = np.stack([kx,ky,kz], axis=3)                               # (L, L, L, 3)
+                nabla_u_bar = 1j * np.einsum('...i,...j->...ij', u_bar, kvecs)     # (L, L, L, 3, 3)
+                nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=[0,1,2])             # (L, L, L, 3, 3)
+                convect_real = np.einsum('...i,...ij->...j', u_real, nabla_u_real) # (L, L, L, 3)
+                convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3)
+            </blockquote>
+            <p>(Hope you appreciate me annotating the shapes.)</p>
             <p>
                 In Fourier space, then, our system is described by
                 \begin{align}
