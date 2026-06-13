@@ -10,6 +10,9 @@ function renderArray(canvasId, array) {
     let amin = np.amin(array);
     let amax = np.amax(array);
 
+    amin = 0;
+    amax = 10;
+
     let pixelWidth = canvas.width / array.shape[1];
 
     for (let i = 0; i < array.shape[0]; i++) {
@@ -42,7 +45,7 @@ function du(T, u, s) {
     let nabla_u = np.stack([uxxy, uyxy], 3);
     
     let convect = np.linalg.matmul(nabla_u, np.expand_dims(u, 3))
-    convect = np.squeeze(np.array(convect).multiply(-1));
+    convect = np.squeeze(np.array(convect));
 
     let gravity = np.expand_dims(p, 2).multiply(ey).divide(np.expand_dims(T, 2));
     
@@ -58,12 +61,15 @@ function du(T, u, s) {
 
     let drag = np.stack([div_u_x, div_u_y], 2);
 
-    return np.expand_dims(nu, 2).multiply(drag).subtract(pressure).subtract(gravity).subtract(convect);
+    console.log('gravity range', np.amin(gravity), np.amax(gravity), );
+
+    return np.zeros_like(u)
+    // return np.expand_dims(nu, 2).multiply(drag).subtract(convect).subtract(pressure);
 }
 
 function dT(T, u, s) {
     let [Ty, Tx] = np.gradient(T, 1);
-    let nablaT = np.stack([Tx, Ty], 2);
+    let nablaT = np.stack([Tx, Ty], 2).multiply(1);
     let uT = np.multiply(u, np.expand_dims(T, 2));
     let diff = np.subtract(nablaT, uT);
     let [Tyxy, Txxy] = np.gradient(diff, 1, [0, 1]);
@@ -71,7 +77,7 @@ function dT(T, u, s) {
     return divDiff.add(s);
 }
 
-const N = 64;
+const N = 32;
 
 let s_0 = np.zeros([N, N]);
 s_0[-1] = np.exp(np.square(np.linspace(-5, 5, N)).multiply(-1)).multiply(0.1);
@@ -80,7 +86,7 @@ s_0[-1] = np.exp(np.square(np.linspace(-5, 5, N)).multiply(-1)).multiply(0.1);
 let u_curr = np.zeros([N, N, 2]);
 let T_curr = np.ones([N, N]);
 
-const dt = 1e-1;
+const dt = 1;
 let t = 0;
 
 function step_T() {
@@ -93,7 +99,7 @@ function step_T() {
     u_curr = u_curr.add(du_curr.multiply(dt));
 
     renderArray('initial', T_curr);
-    requestAnimationFrame(step_T);
+    // requestAnimationFrame(step_T);
 }
 
 step_T();

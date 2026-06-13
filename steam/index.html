@@ -28,85 +28,81 @@
             </p>
             <img src="https://cfdland.com/wp-content/uploads/2024/10/4-2.png" width="400" />
             <p>
-                Solving the fluid equations means keeping track of the tangent vectors to bubbles, which can split apart and combine willy-nilly and take on all sorts of ungodly shapes (see above). My solution? Rather than assuming a spherical cow, I'm going to assume square bubbles. That's right&mdash;I'm going to approximate my pot of boiling water as a set of voxels, each of which are either steam or liquid at a given moment.
+                Solving the fluid equations means keeping track of the tangent vectors to bubbles, which can split apart and combine willy-nilly and take on all sorts of ungodly shapes (see above). My solution? I'm going to cop out of the problem entirely. To be sure, this is about as good as a sketch of a sketch, but it's chaotic, and that's what really matters for a reservoir computer. Let's start!
             </p>
             <p>
-                To be sure, this is about as good as a sketch of a sketch, but it's chaotic, and that's what really matters for a reservoir computer. Let's start!
+                As much as I would like to fully solve the two-phase model and reproduce cavitation&mdash;the formation of bubbles&mdash;I'm trying to make a demo that will run in the browser. Cavitation problems are hilariously expensive and we'd be here for several days just waiting for a bubble to form. So instead, I'm going to use what are known as stochastic Navier-Stokes models: the chaos comes from random noise rather than numerical precision. This is going to save me a lot of integration time, and also be much more stable.
             </p>
             <p>
-                The first thing to note is that I haven't really made my life too much easier. This is still a multiphysics simulation: I need to simulate the heat transfer from the burners to the water via the pot, the change in phase from gas to liquid, the movement of liquid water, and the interaction between gaseous and liquid water. For the first two effects I'll just use Laplace heat transfer; for the rest, I'll have to discretize the Navier-Stokes equations. When the temperature of a voxel exceeds some threshold, I will say it has turned to gas.
-            </p>
-            <p>
-                We represent the flow velocity as the vector field \(\mathbf{u}\) and the density as \(\rho\). Now, in fact, assuming we have a system where all the water stays in the pot, we have the incompressible Navier-Stokes equations:
+                We start with the incompressible flow equations for Navier-Stokes. <i>Now, wait</i>, you might say, <i>isn't steam one of the most compressible things around?</i> You'd be right to say so, but the compressible flow equations are also quite expensive to simulate. Instead, what we will mostly model here is the transport of pressure waves in a liquid, so technically the pre-boiling convective waves. First, the deterministic incompressible flow equations are
                 $$
                 \begin{align}
-                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= \rho\mathbf{F}-\nabla p + \mu\nabla^2\mathbf{u}
+                    \frac{\partial\mathbf{u}}{\partial t} &= \nu\nabla^2\mathbf{u} -(\mathbf{u}\cdot\nabla)\mathbf{u} - \frac{\nabla p}{\rho} + \frac{\mathbf{F}}{\rho}\qquad \\
+                    \nabla\cdot\mathbf{u} &= 0
                 \end{align}
                 $$
-                where \(p\) is the pressure and \(\mu\) the viscosity. \(\mathbf F\) is the external field vector&mdash;in our case we're just going to assume that every part of the water feels a gravitational force pointing downwards that is proportional to the local density, i.e. \(\mathbf{F} = -\rho\mathbf{e}_z\) everywhere:
+                which are the momentum and continuity equations respectively. Normally the external force field is just gravity, \(\mathbf{g}\), but I'm going to input heat-induced expansion in this term at the bottom of the pot. In addition, we have the no-slip boundary condition that \(\mathbf{u} = 0\) on all boundaries of the pot but the very top.
+            </p>
+            <p>
+                To accomodate the formation of small bubbles, now we add our noise term. The most straightforward method is to just straight-up add noise to the momentum equation, so that we end up with
                 $$
                 \begin{align}
-                    \rho\left(\frac{\partial\mathbf{u}}{\partial t} + (\mathbf{u}\cdot\nabla)\mathbf{u}\right) &= -\rho^2\mathbf{e}_z-\nabla p + \mu\nabla^2\mathbf{u} 
+                    \frac{\partial\mathbf{u}}{\partial t} &= \nu\nabla^2\mathbf{u} -(\mathbf{u}\cdot\nabla)\mathbf{u} - \frac{\nabla p}{\rho} + \frac{\mathbf{F}}{\rho} + \mathbf{\xi}\qquad \\
+                    \nabla\cdot\mathbf{u} &= 0
                 \end{align}
                 $$
-                Now, as a prime example of saved effort: even though I am integrating over the entirety of the pot, when I render this I will literally just apply the velocity field to the top layer of voxels, since that's all we see and therefore care about. This will be fine as long as I keep things at a rolling boil.
+                with our Gaussian white noise vector field \(\mathbf{\xi}\).
             </p>
             <p>
-                We now need to couple these equations to the heat input from the burners, which are governed by the Poisson equation. The coupling will enter via the \(p\) and \(\mu\) terms. The hot water both advects and diffuses throughout the pot, so we need to use the field \(\mathbf{u}\) in the incompressible advection-diffusion equation
-                $$
-                    \frac{\partial T}{\partial t} = \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s}
-                $$
-                where \(T\) is the temperature of the liquid, \(D\) the diffusivity, and \(\mathbf{s}\) a time-varying scalar field source term for input heat (aka our burners). More on the exact form of \(\mathbf{s}\) later.
-            </p>
-            <p>
-                All that remains is to relate the temperature of the water to its pressure \(p\) and viscosity \(\mu\), which is to say its phase. Continuing my caveman approximation, I say that above some threshold \(T_\text{boil}\), the phase of the water is steam; otherwise, it is liquid. For now, let's call the boiling pressure \(p_b\) and the liquid pressure \(p_l\); I also define similar quantities for \(\mu\). Then I define the sigmoidal transition from liquid to boiling:
-                $$
+                As a final constraint, taking the divergence of the momentum equation allows us to derive the commonly-used constraint \(\nabla^2 p = -\rho\nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u}\). Now, in the simplest finite difference approximation of the time derivative we have
                 \begin{align}
-                    p &= p_l + S(T-T_\text{boil})(p_b - p_l) \\
-                    \mu &= \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l) \\
+                    \mathbf{u}^{(n+1)} &= \mathbf{u}^n + \Delta t\left(\nu\nabla^2\mathbf{u}^n -(\mathbf{u}\cdot\nabla)\mathbf{u}^n - \frac{\nabla p^n}{\rho} + \frac{\mathbf{F}^n}{\rho} + \mathbf{\xi}\right)\qquad \\
+                    0 &= \nabla\cdot\mathbf{u}^n \\
+                    0 &= -\nabla^2 p^n -\rho\nabla\cdot(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n
                 \end{align}
-                $$
-                where the sigmoid function is \(S(x) = \frac{1}{1 + e^{-\alpha x}}\) for some scale \(\alpha\).In other words, it's as I said: every voxel is either steam or gas, as determined by temperature. Incidentally, I assume the very simple relationship \(\rho = p/T\).
+                If we take \(\mathbf{u}^0(\mathbf{x}) = \mathbf{0}\), then \(p^0(\mathbf{x}) = 0\), and the resulting sequence is found iteratively.
             </p>
             <p>
-                So, our final set of coupled equations is:
-                $$
+                To make it easy to solve these equations implicitly, I'm going to use a meshless solving method. Let our domain be \(\Omega\). In my case I want to do the solutions in 3D Fourier space:
                 \begin{align}
-                    \frac{\partial\mathbf{u}}{\partial t} &= -(\mathbf{u}\cdot\nabla)\mathbf{u}-\frac{p\mathbf{e}_z}{T}-\frac{T\nabla p}{p} + \nu\nabla^2\mathbf{u} \\
-                    \frac{\partial T}{\partial t} &= \nabla\cdot(D\nabla T - \mathbf{u}T) + \mathbf{s}
+                    \overline{\mathbf{u}}(\mathbf{k}) &= \int_\Omega \mathbf{u}(\mathbf{x}) e^{-i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{x} \\
+                    \mathbf{u}(\mathbf{x}) &= \int_\Omega \overline{\mathbf{u}}(\mathbf{k}) e^{i\mathbf{k}\cdot\mathbf{x}} \,d\mathbf{k}
                 \end{align}
-                $$
-                i.e. the Navier-Stokes and advection-diffusion equations. (Note the kinematic viscosity \(\nu = \mu/\rho\).)
+                I represent the Fourier transform of \(\mathbf{u}\) as \(\overline{\mathbf{u}}\) (blame my E&M professor). We likewise have \(\overline{\mathbf{F}}\) and \(\overline{p}\), though note that \(\hat{p}(\mathbf{k})\) is a scalar-valued multivariable function. Since the <a href="https://mathworld.wolfram.com/FourierTransformGaussian.html">Fourier transform of a Gaussian is a Gaussian</a>, we just keep \(\xi\) as-is.
             </p>
             <p>
-                We also have the state equations
-                $$
+                I want to show the derivation of the convective term in 3D Fourier space, because I think it's pretty cool. We have
                 \begin{align}
-                    p &= p_l + S(T-T_\text{boil})(p_b - p_l) \\
-                    \mu &= \mu_l + S(T-T_\text{boil})(\mu_b - \mu_l)
+                    (\mathbf{u}\cdot\nabla)\mathbf{u} &= \left(\left[\int_\Omega \overline{\mathbf{u}}(\mathbf{k}_1) e^{i\mathbf{k_1}\cdot\mathbf{x}} \,d\mathbf{k}_1\right]\cdot\nabla\right)\int_\Omega \overline{\mathbf{u}}(\mathbf{k}_2) e^{i\mathbf{k}_2\cdot\mathbf{x}} \,d\mathbf{k}_2 \\
+                    &= \left(\left[\int_\Omega \overline{\mathbf{u}}(\mathbf{k}_1) e^{i\mathbf{k}_1\cdot\mathbf{x}} \,d\mathbf{k}_1\right]\right)\cdot\int_\Omega i(\mathbf{k}_2\otimes\overline{\mathbf{u}}(\mathbf{k_2})) e^{i\mathbf{k}_2\cdot\mathbf{x}} \,d\mathbf{k} \\
+                    &= \iint_{\Omega \times \Omega} i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}_2\otimes\overline{\mathbf{u}}(\mathbf{k}_2))\right]e^{i(\mathbf{k}_1+\mathbf{k}_2)\cdot\mathbf{x}} \,d\mathbf{k}_1\,d\mathbf{k}_2
                 \end{align}
-                $$
-                for the pressure and viscosity.
+                Now, taking the Fourier transform of the result yields
+                \begin{align}
+                    \overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}(\mathbf{k}) = \iint_{\Omega \times \Omega} i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}_2\otimes\overline{\mathbf{u}}(\mathbf{k}_2))\right]\left(\int_\Omega e^{i(\mathbf{k}_1+\mathbf{k}_2-\mathbf{k})\cdot\mathbf{x}}\,d\mathbf{x}\right) \,d\mathbf{k}_1\,d\mathbf{k}_2
+                \end{align}
+                It can be shown that \(\int_\Omega e^{i(\mathbf{k}_1+\mathbf{k}_2-\mathbf{k})}\,dV \propto \delta(\mathbf{k}_1+\mathbf{k}_2-\mathbf{k})\). The above integrand becomes:
+                \begin{align}
+                    \overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}(\mathbf{k}) = \int_\Omega\left(\iint_{\Omega \times \Omega} i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}_2\otimes\overline{\mathbf{u}}(\mathbf{k}_2))\right] \,d\mathbf{k}_1\,d\mathbf{k}_2\right)\,d\mathbf{k}
+                \end{align}
+                All terms of the integrand now satisfy \(\mathbf{k}_2 = \mathbf{k} - \mathbf{k}_1\), so we can now write the single integral
+                \begin{align}
+                    \overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}(\mathbf{k}) &= \int_\Omega i\left[\overline{\mathbf{u}}(\mathbf{k}_1)\cdot((\mathbf{k}-\mathbf{k}_1)\otimes\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1))\right] \,d\mathbf{k}_1 \\
+                    &= \int_\Omega i(\overline{\mathbf{u}}(\mathbf{k}_1)\cdot(\mathbf{k}-\mathbf{k}_1))\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1) \,d\mathbf{k}_1 \\
+                    &= \int_\Omega (\overline{\mathbf{u}}(\mathbf{k}_1)\cdot i(\mathbf{k}-\mathbf{k}_1))\overline{\mathbf{u}}(\mathbf{k}-\mathbf{k}_1) \,d\mathbf{k}_1
+                \end{align}
+                where I used the contraction identity \(\mathbf{a}(\mathbf{b}\otimes\mathbf{c}) = (\mathbf{a}\cdot\mathbf{b})\mathbf{c}\). The result is pretty interesting: it's not often that we see an equation where you transform into Fourier space with the goal of convolving in there (rather than multiplying).
             </p>
             <p>
-                I've neglected to consider the interfacial temperature conditions and thermodynamic equations of state entirely here, so this simulation is more qualitative than anything, but it will look pretty boil-like and, again, be chaotic enough for our purposes. This is only because we are considering "macroscale" boiling.
-            </p>
-            <p>
-                As always, it takes five minutes to write the PDEs and five years to solve them. However, since I've chosen a voxel-based discretization, things are not so bad here. This is because I can use the finite difference method to integrate these equations. To save computational power (I want this to run in real-time) I will just integrate the equations explicitly. This means that I literally just compute the spatial derivatives as seen above and treat them as time derivatives, which I add to my current stored state \(\mathbf{u}\). This type of extremely simple explicit forward integration is known as Euler integration, but it actually works quite well for what I am doing.
-            </p>
-            <p>
-                Of course, I assume that \(\mathbf{u}(t=0) = \mathbf{0}\) everywhere. I won't say too much about the numerical integration itself because it's fairly straightforward, but as always I find it cool that taking \(\nabla\mathbf{u}\) returns a matrix field (a tensor) rather than a vector field. Man, that's awesome. Anyway, time to show some results!
+                All that remains now is to find the form of each operator in Fourier space. First we have
+                \begin{equation}
+                    \frac{d\overline{\mathbf{u}}}{dt} = 
+                \end{equation}
             </p>
         </div>
         <div class="title"><h1>What it looks like to simulate a steam engine</h1></div>
         <div class="content">
             <p>My ultimate goal is a full 3D simulation, but let's start in two dimensions first to keep things simple.</p>
-            <p>To begin, I'm just going to simulate the effect of a simple sinusoidal heat distribution on the base of the domain, i.e. a distribution for which we have
-            $$
-                \mathbf{s}(x,y) = \sin(x)
-            $$
-            if and only if \(y = 0\).
-            </p>
             <canvas class="plot" id="initial"></canvas>
         </div>
         <div class="footer"></div>
