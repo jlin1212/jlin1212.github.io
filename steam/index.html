@@ -152,7 +152,7 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 \begin{align}
                     \overline{\mathbf{u}}^{(n+1)} = \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]\left(\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\overline{\mathbf{F}}^n\right)+\xi\right)
                 \end{align}
-                One more potential problem! What happens when \(\mathbf{k} = \mathbf{0}\)? In this case we take \(\mathbb{P}=\mathbf{I}\). We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
+                One more potential problem! What happens when \(\mathbf{k} = \mathbf{0}\)? In this case we take \(\mathbb{P}=\mathbf{0}\). We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>
         </div>
         <div class="title"><h1>What it looks like to simulate a water engine</h1></div>

@@ -21,6 +21,55 @@ const navier_script = `
         fmesh = np.meshgrid(*[fspace]*dims)
         fvecs = np.stack(fmesh, -1)
 
+        sigma = (1/4) ** 2
+
+        bdists = b - fvecs[None,...]
+        bdists = np.linalg.norm(bdists, axis=-1)
+        bgauss = np.exp(-bdists ** 2 / sigma ** 2)
+
+        Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
+        Fmag = np.sum(Fmag, axis=0)
+        F = 10 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+
+        nabla_u = np.gradient(u, 1/(L+1), axis=tuple(range(dims)))
+        nabla_u = np.array(nabla_u)
+        nabla_u = np.moveaxis(nabla_u, 0, -2)
+
+        advection = np.einsum('...i,...ij->...j', u, nabla_u)
+        
+        nnabla_u = np.gradient(nabla_u, 1 / (L+1), axis=tuple(range(dims)))
+        nnabla_u = np.array(nnabla_u)
+        nnabla_u = np.moveaxis(nnabla_u, 0, -3)
+
+        lap_u = np.einsum('...iii->...i', nnabla_u)
+
+        nu = 1e1
+        h = 1e-5
+        du = nu * lap_u - advection + F
+
+        u_new = u + h * du
+
+        nabla_u_new = np.gradient(u_new, 1 / (L + 1), axis=tuple(range(dims)))
+        nabla_u_new = np.array(nabla_u_new)
+        nabla_u_new = np.moveaxis(nabla_u_new, 0, -2)
+        div_u_new = np.einsum('...ii->...', nabla_u_new)
+        div_u_new = div_u_new / h
+
+        js.outputs.as_py_json()[simId].u_new = u_new
+        js.outputs.as_py_json()[simId].vis = normalize(div_u_new)
+
+    def du_bar_fft(simId, dims, L, u, s, b):
+        if u is jsnull: u = np.zeros([*[L]*dims,dims])
+        else: u = np.array(u)
+        b = np.array(b)
+        s = np.array(s)
+
+        b = np.expand_dims(b, tuple(range(1, dims+1)))
+        
+        fspace = np.linspace(0, 1, L)
+        fmesh = np.meshgrid(*[fspace]*dims)
+        fvecs = np.stack(fmesh, -1)
+
         sigma = (1/16) ** 2
 
         bdists = b - fvecs[None,...]
@@ -32,7 +81,7 @@ const navier_script = `
 
         fft_axes = tuple(range(dims))
 
-        F = np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+        F = 1 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
         F_bar = np.fft.fftn(F, axes=fft_axes)
         u_bar = np.fft.fftn(u, axes=fft_axes)
 
@@ -56,14 +105,15 @@ const navier_script = `
 
         proj_convect_force_bar = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
 
-        du_bar = 1 * drag_bar - proj_convect_force_bar + np.random.randn(L, L, dims)
+        du_bar = 1e-5 * drag_bar - proj_convect_force_bar + 1 * np.random.randn(L, L, dims)
 
-        h = 1e-7
+        h = 1e-11
         u_bar_new = u_bar + h * du_bar
         u_new = np.fft.ifftn(u_bar_new, axes=fft_axes)
 
         js.outputs.as_py_json()[simId].u_new = u_new;
-        js.outputs.as_py_json()[simId].vis = normalize(np.log(np.abs(u_new[:,:,1])));
+        # js.outputs.as_py_json()[simId].vis = normalize(np.abs(u_new[:,:,1]));
+        js.outputs.as_py_json()[simId].vis = normalize(np.linalg.norm(div_u, axis=-1));
 `;
 
 function renderArray2D(canvasId, array) {
@@ -82,7 +132,7 @@ function renderArray2D(canvasId, array) {
         for (let j = 0; j < W; j++) {
             let shade = array[i][j] * 255;
             ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
-            ctx.fillRect(pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
+            ctx.fillRect(canvas.width - pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
         }
     }
 
@@ -93,7 +143,7 @@ function renderArray2D(canvasId, array) {
 }
 
 globalThis.outputs = {};
-const L = 128;
+const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
     outputs[canvasId] = {};
@@ -112,7 +162,7 @@ function evenBurners(dim, num) {
     for (let i = 0; i < num; i++) {
         let row = [];
         row = row.concat((i + 1) / (num + 1));
-        row = row.concat(Array(dim - 1).fill(0));
+        row = row.concat(Array(dim - 1).fill(0.1));
         result[i] = row;
     }
     return result;
@@ -131,13 +181,14 @@ function sourceVectorFunction(len, callback) {
 async function init() {
     let pyodide = await loadPyodide();
     await pyodide.loadPackage('numpy');
+    await pyodide.loadPackage('scipy');
     pyodide.runPython(`import numpy as np`);
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
     let sim_dims = 2;
-    let seq_length = 2;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(1 * i + 0.05 * n) * Math.sin(0.5 * n) );
+    let seq_length = 3;
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.1 * n) * Math.sin(0.1 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
