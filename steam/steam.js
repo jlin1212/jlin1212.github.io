@@ -11,9 +11,9 @@ const navier_script = `
         vmax = np.amax(v) if vmax is None else vmax
         return (v - vmin) / (vmax - vmin)
 
-    def solve_poisson(rhs):
+    def solve_poisson(rhs, scale):
         N, _ = rhs.shape
-        Ln = diags_array([np.full(N, -2), np.full(N-1, 1), np.full(N-1, 1)], offsets=[0, 1, -1])
+        Ln = (scale ** 2) * diags_array([np.full(N, -2), np.full(N-1, 1), np.full(N-1, 1)], offsets=[0, 1, -1])
         Lnn = kronsum(Ln, Ln)
         sol = spsolve(Lnn, rhs.ravel(order='F'))
         return sol.reshape(rhs.shape, order='F')
@@ -65,7 +65,7 @@ const navier_script = `
         div_u_new = np.einsum('...ii->...', nabla_u_new)
         div_u_new = div_u_new / h
 
-        p = solve_poisson(div_u_new)
+        p = solve_poisson(div_u_new, 1 / (L + 1))
         nabla_p = np.gradient(p, 1 / (L + 1))
         nabla_p = np.array(nabla_p)
         nabla_p = np.moveaxis(nabla_p, 0, -1)
