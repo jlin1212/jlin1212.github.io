@@ -21,13 +21,22 @@ const navier_script = `
         fmesh = np.meshgrid(*[fspace]*dims)
         fvecs = np.stack(fmesh, dims)
 
-        sigma = (0.7) ** 2
+        sigma = (1/3) ** 2
 
         bdists = b - fvecs[None,...]
         bdists = np.linalg.norm(bdists, 2, axis=-1)
-        bgauss = np.exp(-bdists ** 2 / sigma)
+        bgauss = np.exp(-bdists ** 2 / sigma ** 2)
 
-        js.outputs.as_py_json()[simId] = normalize(bgauss[1]);
+        Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
+        Fmag = np.sum(Fmag, axis=0)
+
+        fft_axes = tuple(range(dims))
+
+        F = np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+        F_bar = np.fft.fftn(F, axes=fft_axes)
+        F_space = np.fft.ifftn(F_bar, axes=fft_axes)
+
+        js.outputs.as_py_json()[simId] = normalize(Fmag, vmin=0, vmax=2);
 `;
 
 function renderArray2D(canvasId, array) {
@@ -60,13 +69,14 @@ globalThis.outputs = {};
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
-    let n = 0;
-    while (n < 1000) {
-        const locals = pyodide.toPy({ simId: canvasId, L: L, dims: dims, u: null, s: sfunc(n), b: b });
-        pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
-        renderArray2D(canvasId, outputs[canvasId].toJs());
-        n += 1;
-    }
+    step(pyodide, canvasId, 0, dims, sfunc, b);
+}
+
+function step(pyodide, canvasId, n, dims, sfunc, b) {
+    const locals = pyodide.toPy({ simId: canvasId, L: L, dims: dims, u: null, s: sfunc(n), b: b });
+    pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
+    renderArray2D(canvasId, outputs[canvasId].toJs());
+    setTimeout(step, 20, pyodide, canvasId, n + 1, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {
