@@ -38,7 +38,7 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        F = 10 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+        F = np.pad(Fmag[...,None], { dims: (dims-1, 0) })
 
         nabla_u = np.gradient(u, 1/(L+1), axis=tuple(range(dims)))
         nabla_u = np.array(nabla_u)
@@ -52,8 +52,8 @@ const navier_script = `
 
         lap_u = np.einsum('...iii->...i', nnabla_u)
 
-        nu = 1e1
-        h = 1e-5
+        nu = 1e4
+        h = 1e-11
         du = nu * lap_u - advection + F
 
         u_new = u + h * du
@@ -64,10 +64,15 @@ const navier_script = `
         div_u_new = np.einsum('...ii->...', nabla_u_new)
         div_u_new = div_u_new / h
 
-        p_next = solve_poisson(div_u_new)
+        p = solve_poisson(div_u_new)
+        nabla_p = np.gradient(p)
+        nabla_p = np.array(nabla_p)
+        nabla_p = np.moveaxis(nabla_p, 0, -1)
 
-        js.outputs.as_py_json()[simId].u_new = u_new
-        js.outputs.as_py_json()[simId].vis = normalize(p_next)
+        u_next = u_new - h * nabla_p
+
+        js.outputs.as_py_json()[simId].u_new = u_next
+        js.outputs.as_py_json()[simId].vis = normalize(p)
 
     def du_bar_fft(simId, dims, L, u, s, b):
         if u is jsnull: u = np.zeros([*[L]*dims,dims])
