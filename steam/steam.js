@@ -38,7 +38,8 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        F = np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+        # F = 1e-18 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
+        F = np.random.randn(L, L, 2)
 
         nabla_u = np.gradient(u, 1/(L+1), axis=tuple(range(dims)))
         nabla_u = np.array(nabla_u)
@@ -71,65 +72,10 @@ const navier_script = `
 
         u_next = u_new - h * nabla_p
 
+        print(np.amin(u_next), np.amax(u_next))
+
         js.outputs.as_py_json()[simId].u_new = u_next
         js.outputs.as_py_json()[simId].vis = normalize(u_next[:,:,1])
-
-    def du_bar_fft(simId, dims, L, u, s, b):
-        if u is jsnull: u = np.zeros([*[L]*dims,dims])
-        else: u = np.array(u)
-        b = np.array(b)
-        s = np.array(s)
-
-        b = np.expand_dims(b, tuple(range(1, dims+1)))
-        
-        fspace = np.linspace(0, 1, L)
-        fmesh = np.meshgrid(*[fspace]*dims)
-        fvecs = np.stack(fmesh, -1)
-
-        sigma = (1/16) ** 2
-
-        bdists = b - fvecs[None,...]
-        bdists = np.linalg.norm(bdists, axis=-1)
-        bgauss = np.exp(-bdists ** 2 / sigma ** 2)
-
-        Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
-        Fmag = np.sum(Fmag, axis=0)
-
-        fft_axes = tuple(range(dims))
-
-        F = 1 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
-        F_bar = np.fft.fftn(F, axes=fft_axes)
-        u_bar = np.fft.fftn(u, axes=fft_axes)
-
-        kspace = 2 * np.pi * np.fft.fftfreq(L, 1 / (L + 1))
-        kmesh = np.meshgrid(*[kspace]*dims)
-        kvecs = np.stack(kmesh, -1)
-        kmags = np.linalg.norm(kvecs, axis=-1, keepdims=True)
-
-        nabla_u_bar = np.einsum('...i,...j->...ij', 1j * kvecs, u_bar)
-        nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=fft_axes)
-
-        drag_bar = -(kmags ** 2) * u_bar
-        convect_real = np.einsum('...i,...ij->...j', u, nabla_u_real)
-        convect_bar = np.fft.fftn(convect_real, axes=fft_axes)
-
-        leray_identity = np.expand_dims(np.eye(dims), tuple(range(dims)))
-        leray_kok = np.einsum('...i,...j->...ij', kvecs, kvecs) / kmags[...,None]
-        leray_kok = np.nan_to_num(leray_kok)
-        leray_proj = leray_identity - leray_kok
-        leray_proj[:,:,0,0] = 0.
-
-        proj_convect_force_bar = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
-
-        du_bar = 1e-5 * drag_bar - proj_convect_force_bar + 1 * np.random.randn(L, L, dims)
-
-        h = 1e-11
-        u_bar_new = u_bar + h * du_bar
-        u_new = np.fft.ifftn(u_bar_new, axes=fft_axes)
-
-        js.outputs.as_py_json()[simId].u_new = u_new;
-        # js.outputs.as_py_json()[simId].vis = normalize(np.abs(u_new[:,:,1]));
-        js.outputs.as_py_json()[simId].vis = normalize(np.linalg.norm(div_u, axis=-1));
 `;
 
 function renderArray2D(canvasId, array) {
