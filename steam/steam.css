@@ -68,3 +68,16 @@ blockquote {
     white-space: pre;
     overflow-x: auto;
 }
+
+#loading {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: green;
+    color: white;
+    font-size: 10pt;
+    font-weight: bold;
+    font-family: 'Google Sans', sans-serif;
+    padding: 1em;
+    transition: 0.8s all;
+}

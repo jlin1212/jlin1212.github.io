@@ -8,9 +8,11 @@
         <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="steam.css" />
         <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+        <script src="https://cdn.jsdelivr.net/pyodide/v314.0.0/full/pyodide.js"></script>
         <script type="module" src="steam.js"></script>
     </head>
     <body>
+        <div id="loading">Loading Pyodide/NumPy...</div>
         <div class="title">
             <h1>How to build a steam engine</h1>
         </div>
@@ -167,7 +169,7 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 with some constant \(\sigma\) roughly proportional to the burner radius. \(\mathbf{s}^n_i\) represents the intensity of the \(i\)-th burner at timestep \(n\) and is controlled externally.
             </p>
             <p>
-                To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(an+bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\). The only other variable I have to define is \(\mathbf{u}^0 = \mathbf{0}\), and I'm set to simulate. Thanks to the wonderful <a href='https://numpyts.dev/'>numpy-ts</a>, I'm able to reuse all my favorite broadcasting tricks, etc. right here in the browser!
+                To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(an+bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\). The only other variable I have to define is \(\mathbf{u}^0 = \mathbf{0}\), and I'm set to simulate. I'm going to be running NumPy directly in the browser using Pyodide.
             </p>
             <p>Let's see what we get.</p>
             <canvas class="plot" id="initial"></canvas>
