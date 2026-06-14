@@ -75,7 +75,7 @@ const navier_script = `
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
 
         js.outputs.as_py_json()[simId].u_new = sol_u
-        js.outputs.as_py_json()[simId].vis = sol_u[:,:,1]
+        js.outputs.as_py_json()[simId].vis = normalize(sol_u[:,:,1])
 `;
 
 function renderArray2D(canvasId, array) {
