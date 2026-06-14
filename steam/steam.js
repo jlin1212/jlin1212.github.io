@@ -46,33 +46,33 @@ const navier_script = `
 
         advection = np.einsum('...i,...ij->...j', u, nabla_u)
         
-        nnabla_u = np.gradient(nabla_u, 1 / (L+1), axis=tuple(range(dims)))
+        nnabla_u = np.gradient(nabla_u, 1/(L+1), axis=tuple(range(dims)))
         nnabla_u = np.array(nnabla_u)
         nnabla_u = np.moveaxis(nnabla_u, 0, -3)
 
-        lap_u = np.einsum('...iii->...i', nnabla_u)
+        lap_u = np.einsum('...iij->...j', nnabla_u)
 
-        nu = 1e4
+        nu = 0.1
         h = 1e-11
         du = nu * lap_u - advection + F
 
         u_new = u + h * du
 
-        nabla_u_new = np.gradient(u_new, 1 / (L + 1), axis=tuple(range(dims)))
+        nabla_u_new = np.gradient(u_new, 1/(L+1), axis=tuple(range(dims)))
         nabla_u_new = np.array(nabla_u_new)
         nabla_u_new = np.moveaxis(nabla_u_new, 0, -2)
         div_u_new = np.einsum('...ii->...', nabla_u_new)
         div_u_new = div_u_new / h
 
         p = solve_poisson(div_u_new)
-        nabla_p = np.gradient(p)
+        nabla_p = np.gradient(p, 1 / (L + 1))
         nabla_p = np.array(nabla_p)
         nabla_p = np.moveaxis(nabla_p, 0, -1)
 
         u_next = u_new - h * nabla_p
 
         js.outputs.as_py_json()[simId].u_new = u_next
-        js.outputs.as_py_json()[simId].vis = normalize(p)
+        js.outputs.as_py_json()[simId].vis = normalize(u_next[:,:,1])
 
     def du_bar_fft(simId, dims, L, u, s, b):
         if u is jsnull: u = np.zeros([*[L]*dims,dims])
@@ -178,7 +178,7 @@ function evenBurners(dim, num) {
     for (let i = 0; i < num; i++) {
         let row = [];
         row = row.concat((i + 1) / (num + 1));
-        row = row.concat(Array(dim - 1).fill(0.1));
+        row = row.concat(Array(dim - 1).fill(0.5));
         result[i] = row;
     }
     return result;
@@ -204,7 +204,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.1 * n) * Math.sin(0.1 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
