@@ -2,7 +2,7 @@ import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
 const navier_script = `
     from pyodide.ffi import jsnull
-    from scipy.sparse import diags_array, eye_array, kron, kronsum
+    from scipy.sparse import block_array, diags_array, eye_array, kron, kronsum
     from scipy.sparse.linalg import spsolve
     import js
 
@@ -14,13 +14,15 @@ const navier_script = `
         return (v - vmin) / (vmax - vmin)
 
     def init_sim(simId, L):
-        I = eye_array(L)
-        D = diags_array([np.ones(L-1),-np.ones(L-1)], offsets=[1,-1])
-        L = diags_array([
+        h = 1 / (L - 1)
+
+        I = eye_array(L, format='csc')
+        D = (1 / (2 * h)) * diags_array([np.ones(L-1),-np.ones(L-1)], offsets=[1,-1], format='csc')
+        L = (1 / h ** 2) * diags_array([
             -np.full(L, 2),
             np.ones(L-1),
             np.ones(L-1)
-        ], offsets=[0,1,-1])
+        ], offsets=[0,1,-1], format='csc')
 
         OPS[simId] = {}
         OPS[simId]['Dx']  = kron(D, I)
@@ -48,14 +50,32 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        F = Fmag[...,None] * np.ones((L, L, 2))
+        Fvec = Fmag.ravel(order='F')
         W = 1e-5 * np.random.randn(L, L, 2)
 
-        u_x = u[:,:,0].ravel(order='F')
-        u_y = u[:,:,1].ravel(order='F')
+        U_x = diags_array(u[:,:,0].ravel(order='F'))
+        U_y = diags_array(u[:,:,1].ravel(order='F'))
 
-        js.outputs.as_py_json()[simId].u_new = np.zeros((L, L, 2))
-        js.outputs.as_py_json()[simId].vis = np.zeros((L, L))
+        nu = 1e-6
+
+        convection = (U_x @ OPS[simId]['Dx']) + (U_y @ OPS[simId]['Dy'])
+        momentum = nu * OPS[simId]['Lnn'] - convection
+        zeros = momentum * 0.
+
+        ns_sys = block_array([
+            [momentum,         zeros,            OPS[simId]['Dx']],
+            [zeros,            momentum,         OPS[simId]['Dy']],
+            [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
+        ]).tocsc()
+        ns_rhs = np.concatenate([Fvec, Fvec, np.zeros(L**2)])
+
+        sol = spsolve(ns_sys, ns_rhs)
+
+        sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
+        sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
+
+        js.outputs.as_py_json()[simId].u_new = sol_u
+        js.outputs.as_py_json()[simId].vis = sol_u[:,:,1]
 `;
 
 function renderArray2D(canvasId, array) {
