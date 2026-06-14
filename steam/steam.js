@@ -14,8 +14,18 @@ const navier_script = `
         return (v - vmin) / (vmax - vmin)
 
     def init_sim(simId, L):
+        I = eye_array(L)
+        D = diags_array([np.ones(L-1),-np.ones(L-1)], offsets=[1,-1])
+        L = diags_array([
+            -np.full(L, 2),
+            np.ones(L-1),
+            np.ones(L-1)
+        ], offsets=[0,1,-1])
+
         OPS[simId] = {}
-        OPS[simId]['Dx'] = np.zeros((8, 8))
+        OPS[simId]['Dx']  = kron(D, I)
+        OPS[simId]['Dy']  = kron(I, D)
+        OPS[simId]['Lnn'] = kronsum(L, L)
 
     def du_bar(simId, dims, L, u, s, b):
         if u is jsnull: 
