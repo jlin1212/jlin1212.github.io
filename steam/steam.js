@@ -1,6 +1,9 @@
 import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
-function renderArray(canvasId, array) {
+function renderArray2D(canvasId, array) {
+    let dims = array.shape.length;
+    if (dims != 2) throw new Error('input array is not 2-dimensional');
+
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
 
@@ -11,7 +14,7 @@ function renderArray(canvasId, array) {
     let amax = np.amax(array);
 
     amin = 0;
-    amax = 10;
+    amax = 2;
 
     let pixelWidth = canvas.width / array.shape[1];
 
@@ -19,7 +22,7 @@ function renderArray(canvasId, array) {
         for (let j = 0; j < array.shape[1]; j++) {
             let shade = (array.get([i,j]) - amin) * 255. / (amax - amin);
             ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
-            ctx.fillRect(pixelWidth * j, pixelWidth * i, pixelWidth, pixelWidth);
+            ctx.fillRect(pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
         }
     }
 
@@ -29,82 +32,47 @@ function renderArray(canvasId, array) {
     }
 }
 
-function sigmoid(x) {
-    return np.reciprocal(np.exp(x.multiply(-10)).add(1));
+const L = 64;
+
+function simulate(canvasId, dims, s, b) {
+    let u_shape = Array(dims).fill(L);
+    u_shape.push(dims);
+    let u_0 = np.zeros(u_shape);
+
+    let fspace = np.linspace(0, 1, L);
+    let fmeshes = np.meshgrid(...Array(dims).fill(fspace));
+    let fvecs = np.stack(fmeshes, dims);
+
+    let sigma = (0.5) ** 2;
+
+    let bdists = b;
+    for (let i = 0; i < dims; i++) {
+        bdists = bdists.expand_dims(1);
+    }
+    bdists = bdists.subtract(fvecs.expand_dims(0));
+    bdists = np.linalg.norm(bdists, 2, -1);
+    bdists = np.array(bdists);
+
+    let bbasis = np.exp(bdists.multiply(-1).divide(sigma ** 2));
+
+    step(canvasId, dims, 0, 1e-1, u_0, s, bbasis);
 }
 
-const pL = 1;
-const pB = 1;
-const muL = 1;
-const muB = 1;
-const Tboil = 5;
-const ey = np.expand_dims(np.expand_dims(np.array([0, 1]), 0), 0);
-
-function du(T, u, s) {
-    let p = sigmoid(np.subtract(T, Tboil)).multiply(pB - pL).add(pL);
-    let mu = sigmoid(np.subtract(T, Tboil)).multiply(muB - muL).add(muL);
-    let nu = mu.divide(p);
-    let rho = p.divide(T);
-
-    let [uyxy, uxxy] = np.gradient(u, 1, [0, 1]);
-    let nabla_u = np.stack([uxxy, uyxy], 3);
-    
-    let convect = np.linalg.matmul(nabla_u, np.expand_dims(u, 3))
-    convect = np.squeeze(np.array(convect));
-
-    let gravity = np.expand_dims(p, 2).multiply(ey).divide(np.expand_dims(T, 2));
-    
-    let [py, px] = np.gradient(p);
-    let nabla_p = np.stack([px, py], 2);
-    let pressure = np.expand_dims(T, 2).multiply(nabla_p).divide(np.expand_dims(p, 2));
-
-    let [uyxyxy, uyxyyx] = np.gradient(uyxy, 1, [0, 1]);
-    let [uxxyxy, uxxyyx] = np.gradient(uyxy, 1, [0, 1]);
-
-    let div_u_x = np.array(uxxyxy.slice(':',':','0')).add(uxxyyx.slice(':',':','1'));
-    let div_u_y = np.array(uyxyxy.slice(':',':','0')).add(uyxyyx.slice(':',':','1'));
-
-    let drag = np.stack([div_u_x, div_u_y], 2);
-
-    console.log('gravity range', np.amin(gravity), np.amax(gravity), );
-
-    return np.zeros_like(u)
-    // return np.expand_dims(nu, 2).multiply(drag).subtract(convect).subtract(pressure);
+function step(canvasId, dims, n, h, u, s, bbasis) {
+    let sn = s(n);
+    for (let i = 0; i < dims; i++) sn = sn.expand_dims(1);
+    let F = sn.multiply(bbasis).sum(0).expand_dims(dims);
+    renderArray2D(canvasId, F.slice(':',':','0'));
+    setTimeout(step, 20, canvasId, dims, n + 1, h, u, s, bbasis);
 }
 
-function dT(T, u, s) {
-    let [Ty, Tx] = np.gradient(T, 1);
-    let nablaT = np.stack([Tx, Ty], 2).multiply(1);
-    let uT = np.multiply(u, np.expand_dims(T, 2));
-    let diff = np.subtract(nablaT, uT);
-    let [Tyxy, Txxy] = np.gradient(diff, 1, [0, 1]);
-    let divDiff = np.array(Tyxy.slice(':',':','1')).add(Txxy.slice(':',':','0'));
-    return divDiff.add(s);
+function init() {
+    let i = np.arange(3);
+    let s = (n) => np.sin(i.add(n).multiply(0.01)).multiply(Math.sin(0.1 * n)).add(1);
+    let b = i.add(1).divide(4).expand_dims(1);
+    b = np.pad(b, [[0, 0], [0, 1]]);
+
+    simulate('initial', 2, s, b);
 }
 
-const N = 32;
-
-let s_0 = np.zeros([N, N]);
-s_0[-1] = np.exp(np.square(np.linspace(-5, 5, N)).multiply(-1)).multiply(0.1);
-// s_0[-1] = np.sin(np.linspace(-1, 1, N).multiply(10)).add(1);
-
-let u_curr = np.zeros([N, N, 2]);
-let T_curr = np.ones([N, N]);
-
-const dt = 1;
-let t = 0;
-
-function step_T() {
-    let dT_curr = dT(T_curr, u_curr, s_0.multiply(Math.sin(0.05 * t)));
-    let du_curr = du(T_curr, u_curr, s_0.multiply(Math.sin(100 * t)));
-
-    t = t + dt;
-
-    T_curr = T_curr.add(dT_curr.multiply(dt));
-    u_curr = u_curr.add(du_curr.multiply(dt));
-
-    renderArray('initial', T_curr);
-    // requestAnimationFrame(step_T);
-}
-
-step_T();
+window.onload = init;
