@@ -42,7 +42,7 @@ const navier_script = `
         fmesh = np.meshgrid(*[fspace]*dims)
         fvecs = np.stack(fmesh, -1)
 
-        sigma = (1/2) ** 2
+        sigma = (1/16) ** 2
 
         bdists = b - fvecs[None,...]
         bdists = np.linalg.norm(bdists, axis=-1)
@@ -50,8 +50,8 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        Fvec = Fmag.ravel(order='F')
-        W = 1e-5 * np.random.randn(L, L, 2)
+        Fvec = 2 * Fmag.ravel(order='F')
+        W = 1e-5 * np.random.randn(L**2, 2)
 
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
@@ -62,7 +62,7 @@ const navier_script = `
         momentum = nu * OPS[simId]['Lnn'] - convection
         zeros = momentum * 0.
 
-        ns_sys = block_array([
+        ns_sys = 20 * block_array([
             [momentum,         zeros,            OPS[simId]['Dx']],
             [zeros,            momentum,         OPS[simId]['Dy']],
             [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
@@ -124,7 +124,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b) {
     });
     pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
     renderArray2D(canvasId, outputs[canvasId].vis.toJs());
-    setTimeout(step, 5, pyodide, canvasId, n + 1, dims, sfunc, b);
+    setTimeout(step, 15, pyodide, canvasId, n + 1, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {
