@@ -13,13 +13,14 @@ const navier_script = `
 
     def solve_poisson(rhs, scale):
         N, _ = rhs.shape
-        Ln = (scale ** 2) * diags_array([np.full(N, -2), np.full(N-1, 1), np.full(N-1, 1)], offsets=[0, 1, -1])
+        Ln = diags_array([np.full(N, -2), np.full(N-1, 1), np.full(N-1, 1)], offsets=[0, 1, -1])
         Lnn = kronsum(Ln, Ln)
         sol = spsolve(Lnn, rhs.ravel(order='F'))
         return sol.reshape(rhs.shape, order='F')
 
     def du_bar(simId, dims, L, u, s, b):
-        if u is jsnull: u = np.zeros([*[L]*dims,dims])
+        if u is jsnull: 
+            u = np.zeros([*[L]*dims,dims])
         else: u = np.array(u)
         b = np.array(b)
         s = np.array(s)
@@ -38,8 +39,8 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        # F = 1e-18 * np.pad(Fmag[...,None], { dims: (dims-1, 0) })
-        F = np.random.randn(L, L, 2)
+        F = Fmag[...,None] * np.ones((L, L, 2))
+        W = 1e-5 * np.random.randn(L, L, 2)
 
         nabla_u = np.gradient(u, 1/(L+1), axis=tuple(range(dims)))
         nabla_u = np.array(nabla_u)
@@ -53,29 +54,33 @@ const navier_script = `
 
         lap_u = np.einsum('...iij->...j', nnabla_u)
 
-        nu = 0.1
-        h = 1e-11
-        du = nu * lap_u - advection + F
+        nu = 0.5
+        dt = 1e-5
+        du = nu * lap_u - advection + F + W
 
-        u_new = u + h * du
+        u_new = u + dt * du
 
         nabla_u_new = np.gradient(u_new, 1/(L+1), axis=tuple(range(dims)))
         nabla_u_new = np.array(nabla_u_new)
         nabla_u_new = np.moveaxis(nabla_u_new, 0, -2)
         div_u_new = np.einsum('...ii->...', nabla_u_new)
-        div_u_new = div_u_new / h
+        div_u_new = div_u_new
 
         p = solve_poisson(div_u_new, 1 / (L + 1))
+        print(np.amin(p), np.amax(p))
         nabla_p = np.gradient(p, 1 / (L + 1))
         nabla_p = np.array(nabla_p)
         nabla_p = np.moveaxis(nabla_p, 0, -1)
 
-        u_next = u_new - h * nabla_p
+        u_next = u_new - dt * 40 * nabla_p
 
-        print(np.amin(u_next), np.amax(u_next))
+        nabla_u_next = np.gradient(u_next, 1/(L+1), axis=(0,1))
+        nabla_u_next = np.array(nabla_u_next)
+        nabla_u_next = np.moveaxis(nabla_u_next, 0, -2)
+        div_u_next = np.einsum('...ii->...', nabla_u_next)
 
         js.outputs.as_py_json()[simId].u_new = u_next
-        js.outputs.as_py_json()[simId].vis = normalize(u_next[:,:,1])
+        js.outputs.as_py_json()[simId].vis = normalize(np.atan2(u_next[:,:,1],u_next[:,:,0]))
 `;
 
 function renderArray2D(canvasId, array) {
@@ -124,7 +129,7 @@ function evenBurners(dim, num) {
     for (let i = 0; i < num; i++) {
         let row = [];
         row = row.concat((i + 1) / (num + 1));
-        row = row.concat(Array(dim - 1).fill(0.5));
+        row = row.concat(Array(dim - 1).fill(0));
         result[i] = row;
     }
     return result;
@@ -150,7 +155,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.1 * n) * Math.sin(0.1 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
