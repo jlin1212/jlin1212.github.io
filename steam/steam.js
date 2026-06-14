@@ -4,8 +4,10 @@ const navier_script = `
     from pyodide.ffi import jsnull
     import js
 
-    def normalize(v):
-        return (v - np.amin(v)) / (np.amax(v) - np.amin(v))
+    def normalize(v, vmin=None, vmax=None):
+        vmin = np.amin(v) if vmin is None else vmin
+        vmax = np.amax(v) if vmax is None else vmax
+        return (v - vmin) / (vmax - vmin)
 
     def du_bar(simId, dims, L, u, s, b):
         if u == jsnull: u = np.zeros([*[L]*dims,dims])
@@ -19,10 +21,13 @@ const navier_script = `
         fmesh = np.meshgrid(*[fspace]*dims)
         fvecs = np.stack(fmesh, dims)
 
-        bdists = b - fvecs[None,...]
-        bdists = np.linalg.norm(bdists, axis=-1)
+        sigma = (0.7) ** 2
 
-        js.outputs.as_py_json()[simId] = normalize(bdists[0]);
+        bdists = b - fvecs[None,...]
+        bdists = np.linalg.norm(bdists, 2, axis=-1)
+        bgauss = np.exp(-bdists ** 2 / sigma)
+
+        js.outputs.as_py_json()[simId] = normalize(bgauss[1]);
 `;
 
 function renderArray2D(canvasId, array) {
