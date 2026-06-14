@@ -21,7 +21,7 @@ const navier_script = `
         fmesh = np.meshgrid(*[fspace]*dims)
         fvecs = np.stack(fmesh, -1)
 
-        sigma = (1/3) ** 2
+        sigma = (1/16) ** 2
 
         bdists = b - fvecs[None,...]
         bdists = np.linalg.norm(bdists, axis=-1)
@@ -52,17 +52,18 @@ const navier_script = `
         leray_kok = np.einsum('...i,...j->...ij', kvecs, kvecs) / kmags[...,None]
         leray_kok = np.nan_to_num(leray_kok)
         leray_proj = leray_identity - leray_kok
+        leray_proj[:,:,0,0] = 0.
 
         proj_convect_force_bar = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
 
-        du_bar = 0.1 * drag_bar - proj_convect_force_bar + np.random.randn(L, L, dims)
+        du_bar = 1 * drag_bar - proj_convect_force_bar + np.random.randn(L, L, dims)
 
-        h = 1e-6
+        h = 1e-7
         u_bar_new = u_bar + h * du_bar
         u_new = np.fft.ifftn(u_bar_new, axes=fft_axes)
 
         js.outputs.as_py_json()[simId].u_new = u_new;
-        js.outputs.as_py_json()[simId].vis = normalize(np.log(np.linalg.norm(u_new, axis=-1)));
+        js.outputs.as_py_json()[simId].vis = normalize(np.log(np.abs(u_new[:,:,1])));
 `;
 
 function renderArray2D(canvasId, array) {
@@ -92,7 +93,7 @@ function renderArray2D(canvasId, array) {
 }
 
 globalThis.outputs = {};
-const L = 64;
+const L = 128;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
     outputs[canvasId] = {};
@@ -136,7 +137,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 2;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(1 * i + 0.05 * n) * Math.sin(0.05 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(1 * i + 0.05 * n) * Math.sin(0.5 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
