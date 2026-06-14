@@ -1,15 +1,33 @@
 import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
 const navier_script = `
+    from pyodide.ffi import jsnull
     import js
 
-    def du_bar(simId, s, b):
-        js.outputs.as_object_map()[simId] = s;
+    def normalize(v):
+        return (v - np.amin(v)) / (np.amax(v) - np.amin(v))
+
+    def du_bar(simId, dims, L, u, s, b):
+        if u == jsnull: u = np.zeros([*[L]*dims,dims])
+        else: u = np.array(u)
+        b = np.array(b)
+        s = np.array(s)
+
+        b = np.expand_dims(b, tuple(range(1, dims+1)))
+        
+        fspace = np.linspace(0, 1, L)
+        fmesh = np.meshgrid(*[fspace]*dims)
+        fvecs = np.stack(fmesh, dims)
+
+        bdists = b - fvecs[None,...]
+        bdists = np.linalg.norm(bdists, axis=-1)
+
+        js.outputs.as_py_json()[simId] = normalize(bdists[0]);
 `;
 
 function renderArray2D(canvasId, array) {
-    let dims = array.shape.length;
-    if (dims != 2) throw new Error('input array is not 2-dimensional');
+    let H = array.length;
+    let W = array[0].length;
 
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
@@ -17,17 +35,11 @@ function renderArray2D(canvasId, array) {
     canvas.height = 320;
     canvas.width = 320;
 
-    let amin = np.amin(array);
-    let amax = np.amax(array);
+    let pixelWidth = canvas.width / W;
 
-    amin = 0;
-    amax = 2;
-
-    let pixelWidth = canvas.width / array.shape[1];
-
-    for (let i = 0; i < array.shape[0]; i++) {
-        for (let j = 0; j < array.shape[1]; j++) {
-            let shade = (array.get([i,j]) - amin) * 255. / (amax - amin);
+    for (let i = 0; i < H; i++) {
+        for (let j = 0; j < W; j++) {
+            let shade = array[i][j] * 255;
             ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
             ctx.fillRect(pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
         }
@@ -45,17 +57,20 @@ const L = 64;
 function simulate(pyodide, canvasId, dims, sfunc, b) {
     let n = 0;
     while (n < 1000) {
-        const locals = pyodide.toPy({ name: canvasId, s: sfunc(n), b: b });
-        pyodide.runPython("du_bar(name, s, b)", { locals });
-        console.log(outputs[canvasId].toJs());
+        const locals = pyodide.toPy({ simId: canvasId, L: L, dims: dims, u: null, s: sfunc(n), b: b });
+        pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
+        renderArray2D(canvasId, outputs[canvasId].toJs());
         n += 1;
     }
 }
 
-function evenBurners1D(num) {
+function evenBurners(dim, num) {
     let result = [];
     for (let i = 0; i < num; i++) {
-        result.push((i+1)/(num+1))
+        let row = [];
+        row = row.concat((i + 1) / (num + 1));
+        row = row.concat(Array(dim - 1).fill(0));
+        result[i] = row;
     }
     return result;
 }
@@ -77,11 +92,12 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
+    let sim_dims = 2;
     let seq_length = 3;
     let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.1 * (i + n)) * Math.sin(0.1 * n) );
-    let b = evenBurners1D(seq_length);
+    let b = evenBurners(sim_dims, seq_length);
 
-    simulate(pyodide, 'initial', 2, sfunc, b);
+    simulate(pyodide, 'initial', sim_dims, sfunc, b);
 }
 
 window.onload = init;
