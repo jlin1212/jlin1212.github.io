@@ -53,15 +53,16 @@ const navier_script = `
         leray_kok = np.nan_to_num(leray_kok)
         leray_proj = leray_identity - leray_kok
 
-        proj_convect_force = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
+        proj_convect_force_bar = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
 
-        du = drag_bar - proj_convect_force
+        du_bar = 0.1 * drag_bar - proj_convect_force_bar + np.random.randn(L, L, dims)
 
-        h = 1e-3
-        u = u + h * du
+        h = 1e-6
+        u_bar_new = u_bar + h * du_bar
+        u_new = np.fft.ifftn(u_bar_new, axes=fft_axes)
 
-        js.outputs.as_py_json()[simId].u_new = u;
-        js.outputs.as_py_json()[simId].vis = normalize(Fmag, vmin=0, vmax=2);
+        js.outputs.as_py_json()[simId].u_new = u_new;
+        js.outputs.as_py_json()[simId].vis = normalize(np.log(np.linalg.norm(u_new, axis=-1)));
 `;
 
 function renderArray2D(canvasId, array) {
