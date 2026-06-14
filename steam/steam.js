@@ -1,8 +1,10 @@
 import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
 const navier_script = `
-    def du_bar(u, sn, b):
-        pass
+    import js
+
+    def du_bar(simId, s, b):
+        js.outputs.as_object_map()[simId] = s;
 `;
 
 function renderArray2D(canvasId, array) {
@@ -37,11 +39,17 @@ function renderArray2D(canvasId, array) {
     }
 }
 
+globalThis.outputs = {};
 const L = 64;
 
-function simulate(pyodide, canvasId, dims, s, b) {
+function simulate(pyodide, canvasId, dims, sfunc, b) {
     let n = 0;
-    const locals = pyodide.toPy({ });
+    while (n < 1000) {
+        const locals = pyodide.toPy({ name: canvasId, s: sfunc(n), b: b });
+        pyodide.runPython("du_bar(name, s, b)", { locals });
+        console.log(outputs[canvasId].toJs());
+        n += 1;
+    }
 }
 
 function evenBurners1D(num) {
@@ -53,7 +61,7 @@ function evenBurners1D(num) {
 }
 
 function sourceVectorFunction(len, callback) {
-    return (n) => {
+    return function(n) {
         let s = [];
         for (let i = 0; i < len; i++) {
             s.push(callback(n, i));
@@ -70,10 +78,10 @@ async function init() {
     document.getElementById('loading').style.opacity = 0;
 
     let seq_length = 3;
-    let s = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.1 * (i + n)) * Math.sin(0.1 * n));
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.1 * (i + n)) * Math.sin(0.1 * n) );
     let b = evenBurners1D(seq_length);
 
-    simulate(pyodide, 'initial', s, b);
+    simulate(pyodide, 'initial', 2, sfunc, b);
 }
 
 window.onload = init;
