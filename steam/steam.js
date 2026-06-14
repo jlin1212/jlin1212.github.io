@@ -25,6 +25,7 @@ const navier_script = `
         ], offsets=[0,1,-1], format='csc')
 
         OPS[simId] = {}
+        OPS[simId]['I']   = kron(I, I)
         OPS[simId]['Dx']  = kron(D, I)
         OPS[simId]['Dy']  = kron(I, D)
         OPS[simId]['Lnn'] = kronsum(L, L)
@@ -67,7 +68,7 @@ const navier_script = `
             [zeros,            momentum,         OPS[simId]['Dy']],
             [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
         ]).tocsc()
-        ns_rhs = np.concatenate([Fvec, Fvec, np.zeros(L**2)])
+        ns_rhs = np.concatenate([0.1 * Fvec, Fvec, np.zeros(L**2)])
 
         sol = spsolve(ns_sys, ns_rhs)
 
@@ -124,7 +125,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b) {
     });
     pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
     renderArray2D(canvasId, outputs[canvasId].vis.toJs());
-    setTimeout(step, 15, pyodide, canvasId, n + 1, dims, sfunc, b);
+    setTimeout(step, 42, pyodide, canvasId, n + 1, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {
@@ -158,7 +159,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.1 * n) * Math.sin(0.1 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
