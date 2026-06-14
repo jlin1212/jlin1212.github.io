@@ -56,7 +56,7 @@ const navier_script = `
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
 
-        nu = 1e-6
+        nu = 1e-5
 
         convection = (U_x @ OPS[simId]['Dx']) + (U_y @ OPS[simId]['Dy'])
         momentum = nu * OPS[simId]['Lnn'] - convection
@@ -124,7 +124,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b) {
     });
     pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
     renderArray2D(canvasId, outputs[canvasId].vis.toJs());
-    if (n < 100) setTimeout(step, 20, pyodide, canvasId, n + 1, dims, sfunc, b);
+    setTimeout(step, 5, pyodide, canvasId, n + 1, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {
