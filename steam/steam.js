@@ -2,12 +2,21 @@ import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
 const navier_script = `
     from pyodide.ffi import jsnull
+    from scipy.sparse import diags_array, kronsum
+    from scipy.sparse.linalg import spsolve
     import js
 
     def normalize(v, vmin=None, vmax=None):
         vmin = np.amin(v) if vmin is None else vmin
         vmax = np.amax(v) if vmax is None else vmax
         return (v - vmin) / (vmax - vmin)
+
+    def solve_poisson(rhs):
+        N, _ = rhs.shape
+        Ln = diags_array([np.full(N, -2), np.full(N-1, 1), np.full(N-1, 1)], offsets=[0, 1, -1])
+        Lnn = kronsum(Ln, Ln)
+        sol = spsolve(Lnn, rhs.ravel(order='F'))
+        return sol.reshape(rhs.shape, order='F')
 
     def du_bar(simId, dims, L, u, s, b):
         if u is jsnull: u = np.zeros([*[L]*dims,dims])
@@ -55,8 +64,10 @@ const navier_script = `
         div_u_new = np.einsum('...ii->...', nabla_u_new)
         div_u_new = div_u_new / h
 
+        p_next = solve_poisson(div_u_new)
+
         js.outputs.as_py_json()[simId].u_new = u_new
-        js.outputs.as_py_json()[simId].vis = normalize(div_u_new)
+        js.outputs.as_py_json()[simId].vis = normalize(p_next)
 
     def du_bar_fft(simId, dims, L, u, s, b):
         if u is jsnull: u = np.zeros([*[L]*dims,dims])
