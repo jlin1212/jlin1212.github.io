@@ -81,9 +81,9 @@
             <p>
                 The following identities hold for derivative operators in Fourier space:
                 \begin{align}
-                    \overline{\nabla\mathbf{u}} &= -i\mathbf{k}\otimes\overline{\mathbf{u}} \\
-                    \overline{\nabla^2\mathbf{u}} &= \overline{\nabla\cdot\nabla\mathbf{u}} = -i\mathbf{k}\cdot(-i\mathbf{k}\otimes\mathbf{u}) = -(\mathbf{k}\cdot\mathbf{k})\overline{\mathbf{u}} = -i|\mathbf{k}|^2\mathbf{u} \\
-                    \overline{\nabla\cdot\mathbf{u}} &= -i\mathbf{k}\cdot\overline{\mathbf{u}} \\
+                    \overline{\nabla\mathbf{u}} &= i\mathbf{k}\otimes\overline{\mathbf{u}} \\
+                    \overline{\nabla^2\mathbf{u}} &= \overline{\nabla\cdot\nabla\mathbf{u}} = i\mathbf{k}\cdot(i\mathbf{k}\otimes\mathbf{u}) = -(\mathbf{k}\cdot\mathbf{k})\overline{\mathbf{u}} = -|\mathbf{k}|^2\mathbf{u} \\
+                    \overline{\nabla\cdot\mathbf{u}} &= i\mathbf{k}\cdot\overline{\mathbf{u}} \\
                 \end{align}
                 Here \(\otimes\) denotes the outer product. These will be useful in what comes next...
             </p>
@@ -124,9 +124,9 @@
             <blockquote>
 u_bar = np.fft.fftn(u_real, axes=[0,1,2])                          # (L, L, L, 3)
 kspace = np.fft.fftfreq(L)                                         # (L,)
-kx, ky, kz = np.meshgrid(*[kspace]*3)                              # (L, L, L) x 3
-kvecs = np.stack([kx,ky,kz], axis=3)                               # (L, L, L, 3)
-nabla_u_bar = -1j * np.einsum('...i,...j->...ij', u_bar, kvecs)    # (L, L, L, 3, 3)
+kmesh = np.meshgrid(*[kspace]*3)                                   # (L, L, L) x 3
+kvecs = np.stack(kmesh, axis=3)                                    # (L, L, L, 3)
+nabla_u_bar = 1j * np.einsum('...i,...j->...ij', u_bar, kvecs)    # (L, L, L, 3, 3)
 nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=[0,1,2])             # (L, L, L, 3, 3)
 convect_real = np.einsum('...i,...ij->...j', u_real, nabla_u_real) # (L, L, L, 3)
 convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3)
@@ -135,7 +135,7 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
             <p>
                 In Fourier space, then, our system is described by
                 \begin{align}
-                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}+i\mathbf{k}\overline{p}^n+\overline{\mathbf{F}}^n+\xi\right) \\
+                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}\cdot\nabla)\mathbf{u}}-i\mathbf{k}\overline{p}^n+\overline{\mathbf{F}}^n+\xi\right) \\
                     0 &= i\mathbf{k}\cdot\overline{\mathbf{u}}^n
                 \end{align}
                 Why did I omit the pressure constraint? Now that I've done this transform, we can solve for it directly:
@@ -144,13 +144,13 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 $$
                 Might as well sub it in, right? Now we just have a single equation:
                 \begin{align}
-                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}-i\mathbf{k}\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
-                    &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\frac{\mathbf{k}(\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
-                    &= \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\underbrace{\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]}_\text{$\mathbb{P}$}\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\ldots+\xi\right)
+                    \overline{\mathbf{u}}^{(n+1)} &= \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}-i\mathbf{k}\frac{(i\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
+                    &= \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\frac{\mathbf{k}(\mathbf{k}\cdot\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}})}{|\mathbf{k}|^2}+\ldots+\xi\right) \\
+                    &= \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\underbrace{\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]}_\text{$\mathbb{P}$}\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\ldots+\xi\right)
                 \end{align}
                 Notice the appearance of the famous Leray projector, \(\mathbb{P}\). Wait a minute, what happened to our external force field \(\overline{\mathbf{F}}^n\)? It turns out that customarily part of the input force is absorbed into the pressure in order to make it divergence free, something we can also do using \(\mathbb{P}\):
                 \begin{align}
-                    \overline{\mathbf{u}}^{(n+1)} = \overline{\mathbf{u}}^n + h\left(-i\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]\left(\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\overline{\mathbf{F}}^n\right)+\xi\right)
+                    \overline{\mathbf{u}}^{(n+1)} = \overline{\mathbf{u}}^n + h\left(-\nu|\mathbf{k}|^2\overline{\mathbf{u}}^n-\left[\mathbf{I}-\frac{\mathbf{k}\otimes\mathbf{k}}{|\mathbf{k}|^2}\right]\left(\overline{(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n}+\overline{\mathbf{F}}^n\right)+\xi\right)
                 \end{align}
                 One more potential problem! What happens when \(\mathbf{k} = \mathbf{0}\)? In this case we take \(\mathbb{P}=\mathbf{I}\). We're now ready to simulate the system fully in Fourier space. To get its "actual" state at any time, we can just do an inverse Fourier transform!
             </p>

@@ -10,7 +10,7 @@ const navier_script = `
         return (v - vmin) / (vmax - vmin)
 
     def du_bar(simId, dims, L, u, s, b):
-        if u == jsnull: u = np.zeros([*[L]*dims,dims])
+        if u is jsnull: u = np.zeros([*[L]*dims,dims])
         else: u = np.array(u)
         b = np.array(b)
         s = np.array(s)
@@ -19,12 +19,12 @@ const navier_script = `
         
         fspace = np.linspace(0, 1, L)
         fmesh = np.meshgrid(*[fspace]*dims)
-        fvecs = np.stack(fmesh, dims)
+        fvecs = np.stack(fmesh, -1)
 
         sigma = (1/3) ** 2
 
         bdists = b - fvecs[None,...]
-        bdists = np.linalg.norm(bdists, 2, axis=-1)
+        bdists = np.linalg.norm(bdists, axis=-1)
         bgauss = np.exp(-bdists ** 2 / sigma ** 2)
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
@@ -34,9 +34,34 @@ const navier_script = `
 
         F = np.pad(Fmag[...,None], { dims: (dims-1, 0) })
         F_bar = np.fft.fftn(F, axes=fft_axes)
-        F_space = np.fft.ifftn(F_bar, axes=fft_axes)
+        u_bar = np.fft.fftn(u, axes=fft_axes)
 
-        js.outputs.as_py_json()[simId] = normalize(Fmag, vmin=0, vmax=2);
+        kspace = 2 * np.pi * np.fft.fftfreq(L, 1 / (L + 1))
+        kmesh = np.meshgrid(*[kspace]*dims)
+        kvecs = np.stack(kmesh, -1)
+        kmags = np.linalg.norm(kvecs, axis=-1, keepdims=True)
+
+        nabla_u_bar = np.einsum('...i,...j->...ij', 1j * kvecs, u_bar)
+        nabla_u_real = np.fft.ifftn(nabla_u_bar, axes=fft_axes)
+
+        drag_bar = -(kmags ** 2) * u_bar
+        convect_real = np.einsum('...i,...ij->...j', u, nabla_u_real)
+        convect_bar = np.fft.fftn(convect_real, axes=fft_axes)
+
+        leray_identity = np.expand_dims(np.eye(dims), tuple(range(dims)))
+        leray_kok = np.einsum('...i,...j->...ij', kvecs, kvecs) / kmags[...,None]
+        leray_kok = np.nan_to_num(leray_kok)
+        leray_proj = leray_identity - leray_kok
+
+        proj_convect_force = np.einsum('...ij,...j->...i', leray_proj, convect_bar + F_bar)
+
+        du = drag_bar - proj_convect_force
+
+        h = 1e-3
+        u = u + h * du
+
+        js.outputs.as_py_json()[simId].u_new = u;
+        js.outputs.as_py_json()[simId].vis = normalize(Fmag, vmin=0, vmax=2);
 `;
 
 function renderArray2D(canvasId, array) {
@@ -69,14 +94,15 @@ globalThis.outputs = {};
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
+    outputs[canvasId] = {};
     step(pyodide, canvasId, 0, dims, sfunc, b);
 }
 
 function step(pyodide, canvasId, n, dims, sfunc, b) {
-    const locals = pyodide.toPy({ simId: canvasId, L: L, dims: dims, u: null, s: sfunc(n), b: b });
+    const locals = pyodide.toPy({ simId: canvasId, L: L, dims: dims, u: (n > 0) ? outputs[canvasId]['u_new'] : null, s: sfunc(n), b: b });
     pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
-    renderArray2D(canvasId, outputs[canvasId].toJs());
-    setTimeout(step, 20, pyodide, canvasId, n + 1, dims, sfunc, b);
+    renderArray2D(canvasId, outputs[canvasId].vis.toJs());
+    if (n < 10000) setTimeout(step, 20, pyodide, canvasId, n + 1, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {
@@ -108,8 +134,8 @@ async function init() {
     document.getElementById('loading').style.opacity = 0;
 
     let sim_dims = 2;
-    let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.1 * (i + n)) * Math.sin(0.1 * n) );
+    let seq_length = 2;
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(1 * i + 0.05 * n) * Math.sin(0.05 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
