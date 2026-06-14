@@ -1,5 +1,10 @@
 import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
 
+const navier_script = `
+    def du_bar(u, sn, b):
+        pass
+`;
+
 function renderArray2D(canvasId, array) {
     let dims = array.shape.length;
     if (dims != 2) throw new Error('input array is not 2-dimensional');
@@ -35,15 +40,40 @@ function renderArray2D(canvasId, array) {
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, s, b) {
-    console.log(pyodide.globals.get('np'));
+    let n = 0;
+    const locals = pyodide.toPy({ });
+}
+
+function evenBurners1D(num) {
+    let result = [];
+    for (let i = 0; i < num; i++) {
+        result.push((i+1)/(num+1))
+    }
+    return result;
+}
+
+function sourceVectorFunction(len, callback) {
+    return (n) => {
+        let s = [];
+        for (let i = 0; i < len; i++) {
+            s.push(callback(n, i));
+        }
+        return s;
+    }
 }
 
 async function init() {
     let pyodide = await loadPyodide();
     await pyodide.loadPackage('numpy');
-    pyodide.runPython('import numpy as np');
+    pyodide.runPython(`import numpy as np`);
+    pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
-    simulate(pyodide)
+
+    let seq_length = 3;
+    let s = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.1 * (i + n)) * Math.sin(0.1 * n));
+    let b = evenBurners1D(seq_length);
+
+    simulate(pyodide, 'initial', s, b);
 }
 
 window.onload = init;
