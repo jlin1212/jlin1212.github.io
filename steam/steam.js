@@ -70,6 +70,11 @@ const navier_script = `
         ]).tocsc()
         ns_rhs = np.concatenate([0.1 * Fvec, Fvec, np.zeros(L**2)])
 
+        ns_sys[:L] = OPS[simId]['I'][:L]
+        ns_sys[L:] = OPS[simId]['I'][L:]
+        ns_rhs[:L] = 0.
+        ns_rhs[L:] = 0.
+
         sol = cg(ns_sys, ns_rhs)
 
         sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
