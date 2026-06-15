@@ -111,7 +111,7 @@ function renderArray2D(canvasId, array) {
 }
 
 globalThis.outputs = {};
-const L = 128;
+const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
     document.getElementById(canvasId).addEventListener('click', function() {
