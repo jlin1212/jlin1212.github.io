@@ -62,10 +62,9 @@
                 with our Gaussian white noise vector field \(\mathbf{\xi}\).
             </p>
             <p>
-                As a final constraint, taking the divergence of the momentum equation allows us to derive the commonly-used constraint \(\nabla^2 p = -\nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u})\). Now, in the simplest finite difference approximation of the time derivative we have
+                As a final constraint, taking the divergence of the momentum equation and using the incompressibility condition allows us to derive the commonly-used constraint \(\nabla^2 p = -\nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u})\). Now, in the simplest finite difference approximation of the time derivative we have
                 \begin{align}
                     \mathbf{u}^{(n+1)} &= \mathbf{u}^n + h\left(\nu\nabla^2\mathbf{u}^n -(\mathbf{u}\cdot\nabla)\mathbf{u}^n - \nabla p^n + \mathbf{F}^n + \mathbf{\xi}\right)\qquad \\
-                    0 &= \nabla\cdot\mathbf{u}^n \\
                     0 &= -\nabla^2 p^n -\nabla\cdot(\mathbf{u}^n\cdot\nabla)\mathbf{u}^n
                 \end{align}
                 If we take \(\mathbf{u}^0(\mathbf{x}) = \mathbf{0}\), then \(p^0(\mathbf{x}) = 0\), and the resulting sequence is found iteratively.
