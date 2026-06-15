@@ -1,5 +1,3 @@
-import * as np from 'https://unpkg.com/numpy-ts/dist/numpy-ts.browser.js';
-
 const navier_script = `
     from pyodide.ffi import jsnull
     from scipy.sparse import block_array, diags_array, eye_array, kron, kronsum
@@ -30,7 +28,7 @@ const navier_script = `
         OPS[simId]['Dy']  = kron(I, D)
         OPS[simId]['Lnn'] = kronsum(L, L)
 
-    def du_bar(simId, dims, L, u, s, b):
+    def du(simId, dims, L, u, s, b):
         if u is jsnull: 
             u = np.zeros([*[L]*dims,dims])
         else: u = np.array(u)
@@ -69,11 +67,6 @@ const navier_script = `
             [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
         ]).tocsc()
         ns_rhs = np.concatenate([0.1 * Fvec, Fvec, np.zeros(L**2)])
-
-        #ns_sys[:L] = OPS[simId]['I'][:L]
-        #ns_sys[L:] = OPS[simId]['I'][L:]
-        #ns_rhs[:L] = 0.
-        #ns_rhs[L:] = 0.
 
         sol = spsolve(ns_sys, ns_rhs)
 
@@ -135,7 +128,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b) {
             u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
             s: sfunc(n), b: b 
         });
-        pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
+        pyodide.runPython("du(simId, dims, L, u, s, b)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
     }
     renderArray2D(canvasId, outputs[canvasId].vis.toJs());
