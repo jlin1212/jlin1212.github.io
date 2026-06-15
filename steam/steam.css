@@ -38,6 +38,10 @@ body {
     padding: 10em;
 }
 
+.plot {
+    cursor: pointer;
+}
+
 a:hover {
     font-weight: bold;
 }
@@ -80,4 +84,15 @@ blockquote {
     font-family: 'Google Sans', sans-serif;
     padding: 1em;
     transition: 0.8s all;
+}
+
+.sim-wrapper {
+    position: relative;
+}
+
+.sim-wrapper .sim-time {
+    font-family: 'Google Sans Code', monospace;
+    position: absolute;
+    color: white;
+    top: 8px; left: 8px;
 }

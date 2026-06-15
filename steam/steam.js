@@ -109,6 +109,10 @@ globalThis.outputs = {};
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b) {
+    document.getElementById(canvasId).addEventListener('click', function() {
+        let isRunning = this.dataset.running === 'true';
+        this.dataset.running = (!isRunning).toString();
+    });
     outputs[canvasId] = {};
     const locals = pyodide.toPy({ simId: canvasId, L: L });
     pyodide.runPython("init_sim(simId, L)", { locals });
@@ -116,16 +120,21 @@ function simulate(pyodide, canvasId, dims, sfunc, b) {
 }
 
 function step(pyodide, canvasId, n, dims, sfunc, b) {
-    const locals = pyodide.toPy({ 
-        simId: canvasId, 
-        L: L, 
-        dims: dims, 
-        u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
-        s: sfunc(n), b: b 
-    });
-    pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
+    let canvas = document.getElementById(canvasId);
+    let isRunning = canvas.dataset.running === 'true';
+    if (isRunning || n == 0) {
+        const locals = pyodide.toPy({ 
+            simId: canvasId, 
+            L: L, 
+            dims: dims, 
+            u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
+            s: sfunc(n), b: b 
+        });
+        pyodide.runPython("du_bar(simId, dims, L, u, s, b)", { locals });
+        canvas.nextElementSibling.textContent = `step=${n}`;
+    }
     renderArray2D(canvasId, outputs[canvasId].vis.toJs());
-    setTimeout(step, 42, pyodide, canvasId, n + 1, dims, sfunc, b);
+    setTimeout(step, 42, pyodide, canvasId, isRunning ? n + 1 : n, dims, sfunc, b);
 }
 
 function evenBurners(dim, num) {

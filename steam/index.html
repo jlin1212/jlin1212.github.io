@@ -172,7 +172,11 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 To start, I want to input time-varying sine waves at evenly-spaced inputs. In this case \(\mathbf{s}^n_i = \sin(an)\sin(an+bi)\) for some constants \(a, b\), and \(\mathbf{b}_i = (L\frac{i-1}{\ell+1}, 0)\). The only other variable I have to define is \(\mathbf{u}^0 = \mathbf{0}\), and I'm set to simulate. I'm going to be running NumPy directly in the browser using Pyodide.
             </p>
             <p>Let's see what we get. I'm running at a very low-resolution \(H=W=64\) grid because anything larger would take about 10 seconds per frame.</p>
-            <canvas class="plot" id="initial"></canvas>
+            <p><b>NOTE:</b> Click the canvas to start/stop the simulation. I was too lazy to GPU-accelerate this code, so I make no promises that you won't nuke your computer by starting it.</p>
+            <div class="sim-wrapper">
+                <canvas class="plot" id="initial" data-running="false"></canvas>
+                <span class="sim-time">step=0</span>
+            </div>
             <p>Erm, I think I have to improve the rendering for this...but I have a plan. For now, I'm just fucking stoked (see what I did there?) to have this actually working! I can see the vorticity and turbulence (but only because I know what I'm looking for haha). If you're wondering why it looks a little wonky, it's mainly because to make this runnable in a browser I had to assume constant density everywhere.</p>
             <p>The other thing is that I haven't actually enforced the no-slip/wall conditions (i.e. \(\mathbf{u}(\mathbf{x}) = \mathbf{0}, \forall\mathbf{x}\in\partial\Omega\)) on the edges yet, so right now the liquid is free to flow everywhere. This is the reason we're not seeing well-defined convection cells here.</p>
         </div>
