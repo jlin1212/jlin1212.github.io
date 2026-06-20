@@ -34,6 +34,9 @@ const navier_script = `
         else: u = np.array(u)
         b = np.array(b)
         s = np.array(s)
+        s_idx = np.arange(s.shape[0])
+
+        print(s_idx)
 
         b = np.expand_dims(b, tuple(range(1, dims+1)))
         
@@ -73,9 +76,10 @@ const navier_script = `
         sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
 
+        js.outputs.as_py_json()[simId].s     = s
         js.outputs.as_py_json()[simId].u_new = sol_u
-        js.outputs.as_py_json()[simId].u_top = sol_u[0,:,1]
-        js.outputs.as_py_json()[simId].vis = normalize(np.linalg.norm(sol_u, axis=-1))
+        js.outputs.as_py_json()[simId].u_out = sol_u[0,:,1]
+        js.outputs.as_py_json()[simId].vis   = normalize(np.linalg.norm(sol_u, axis=-1))
 `;
 
 function renderArray2D(canvasId, array) {
@@ -99,15 +103,15 @@ function renderArray2D(canvasId, array) {
     }
 
     let code_blocks = document.getElementsByTagName('blockquote');
-    for (let i = 0; i < code_blocks.length; i++) {
-        code_blocks[i].textContent = code_blocks[i].textContent.trim();
+    for (const code_block of code_blocks) {
+        code_block.textContent = code_block.textContent.trim();
     }
 }
 
 globalThis.outputs = {};
 const L = 64;
 
-function simulate(pyodide, canvasId, dims, sfunc, b) {
+function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
     document.getElementById(canvasId).addEventListener('click', function() {
         let isRunning = this.dataset.running === 'true';
         this.dataset.running = (!isRunning).toString();
@@ -119,25 +123,35 @@ function simulate(pyodide, canvasId, dims, sfunc, b) {
     outputs[canvasId] = {};
     const locals = pyodide.toPy({ simId: canvasId, L: L });
     pyodide.runPython("init_sim(simId, L)", { locals });
-    step(pyodide, canvasId, 0, dims, sfunc, b);
+    step(pyodide, canvasId, 0, dims, sfunc, b, graphs);
 }
 
-function step(pyodide, canvasId, n, dims, sfunc, b) {
+function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
     let canvas = document.getElementById(canvasId);
     let isRunning = canvas.dataset.running === 'true';
-    if (isRunning || n == 0) {
+
+    if (isRunning) {
+        console.log('calling python anyway', isRunning, n)
         const locals = pyodide.toPy({ 
             simId: canvasId, 
             L: L, 
             dims: dims, 
             u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
-            s: sfunc(n), b: b 
+            s: sfunc(n), b: b
         });
         pyodide.runPython("du(simId, dims, L, u, s, b)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
+
+        renderArray2D(canvasId, outputs[canvasId].vis.toJs());
+        if (graphs !== undefined) {
+            for (const graph of graphs) {
+            }
+        }
+    } else {
+        if (outputs[canvasId].vis == null) renderArray2D(canvasId, Array(L).fill(Array(L).fill(0)));
     }
-    renderArray2D(canvasId, outputs[canvasId].vis.toJs());
-    setTimeout(step, 42, pyodide, canvasId, isRunning ? n + 1 : n, dims, sfunc, b);
+    
+    setTimeout(step, 42, pyodide, canvasId, isRunning ? n + 1 : n, dims, sfunc, b, graphs);
 }
 
 function evenBurners(dim, num) {
@@ -175,7 +189,13 @@ async function init() {
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
-    simulate(pyodide, 'reservoir', sim_dims, sfunc, b);
+
+    let reservoir_graphs = [{
+        key: 's'
+    }, {
+        key: 'u_out'
+    }];
+    simulate(pyodide, 'reservoir', sim_dims, sfunc, b, reservoir_graphs);
 }
 
 window.onload = init;
