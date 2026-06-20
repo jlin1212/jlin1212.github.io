@@ -112,24 +112,22 @@ class GraphManager {
     static hists = {};
     static dx = 1;
 
-    static initGraphs(graphs) {
-        for (const graph of graphs) {
-            const canvas = document.getElementById(graph.canvas);
-            const ctx = canvas.getContext('2d');
+    static initGraph(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
 
-            canvas.height = 200;
-            canvas.width = 500;
+        canvas.height = 200;
+        canvas.width = 500;
 
-            ctx.beginPath();
-            ctx.strokeStyle = '#aaa';
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = '#aaa';
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
 
-            this.hists[graph.canvas] = {
-                offset: this.dx
-            };
-        }
+        this.hists[canvasId] = {
+            offset: 0
+        };
     }
 
     static graphSeries(canvasId, sample, scale) {
@@ -139,6 +137,12 @@ class GraphManager {
         if (this.hists[canvasId] != null && this.hists[canvasId].sample != null) {
             let hist = this.hists[canvasId];
             const offset = hist.offset + this.dx;
+
+            if (offset > canvas.width) {
+                this.initGraph(canvasId);
+                return;
+            }
+
             const y_base = canvas.height / 2;
 
             for (let i = 0; i < sample.length; i++) {
@@ -161,7 +165,9 @@ globalThis.outputs = {};
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
-    if (graphs !== undefined) GraphManager.initGraphs(graphs);
+    if (graphs !== undefined) {
+        for (const graph of graphs) GraphManager.initGraph(graph.canvas);
+    }
 
     document.getElementById(canvasId).addEventListener('click', function() {
         let isRunning = this.dataset.running === 'true';
@@ -248,7 +254,7 @@ async function init() {
     }, {
         canvas: 'reservoirOutput',
         key: 'u_out',
-        scale: 40
+        scale: 20
     }];
     simulate(pyodide, 'reservoir', sim_dims, sfunc, b, reservoir_graphs);
 }
