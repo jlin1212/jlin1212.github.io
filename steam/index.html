@@ -179,7 +179,13 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
             <p>Erm, I think I have to improve the rendering for this...but I have a plan. For now, I'm just fucking stoked (see what I did there?) to have this actually working! I can see the vorticity and turbulence (but only because I know what I'm looking for haha). If you're wondering why it looks a little wonky, it's mainly because to make this runnable in a browser I had to assume constant density everywhere.</p>
             <p>The other thing is that I haven't actually enforced the no-slip/wall conditions (i.e. \(\mathbf{u}(\mathbf{x}) = \mathbf{0}, \forall\mathbf{x}\in\partial\Omega\)) on the edges yet, so right now the liquid is free to flow everywhere. This is the reason we're not seeing well-defined convection cells here.</p>
             <div class="title"><h1>Okay, but what about predicting the weather?</h1></div>
-            <p>Coming soon (probably later this week...)</p>
+            <p>
+                Well, we've got the steam, but this isn't an engine yet. To get actual output from our pot of water, we're going to need to a little more work. To understand where I'm going with this, let's do the same inputs, but first take our pot of water and plot the intensity of burners, as well as the velocity of the top of the water (click to start):
+                <div class="sim-wrapper">
+                    <canvas class="plot" id="reservoir" data-running="false"></canvas>
+                    <span class="sim-time">step=0</span>
+                </div>
+            </p>
         </div>
         <div class="footer"></div>
     </body>

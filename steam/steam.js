@@ -74,6 +74,7 @@ const navier_script = `
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
 
         js.outputs.as_py_json()[simId].u_new = sol_u
+        js.outputs.as_py_json()[simId].u_top = sol_u[0,:,1]
         js.outputs.as_py_json()[simId].vis = normalize(np.linalg.norm(sol_u, axis=-1))
 `;
 
@@ -110,6 +111,10 @@ function simulate(pyodide, canvasId, dims, sfunc, b) {
     document.getElementById(canvasId).addEventListener('click', function() {
         let isRunning = this.dataset.running === 'true';
         this.dataset.running = (!isRunning).toString();
+        let canvases = document.getElementsByTagName('canvas');
+        for (const canvas of canvases) {
+            if (canvas.id !== canvasId) canvas.dataset.running = 'false';
+        }
     });
     outputs[canvasId] = {};
     const locals = pyodide.toPy({ simId: canvasId, L: L });
@@ -170,6 +175,7 @@ async function init() {
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
+    simulate(pyodide, 'reservoir', sim_dims, sfunc, b);
 }
 
 window.onload = init;
