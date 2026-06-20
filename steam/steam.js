@@ -4,7 +4,7 @@ const H = 9;
 const INPUT_DIM = 3;
 const HIDDEN_DIM = 5;
 const OUTPUT_DIM = 3;
-const RESERVOIR_CUTOFF = 50;
+const RESERVOIR_CUTOFF = 200;
 
 const navier_script = `
     from pyodide.ffi import jsnull
@@ -69,7 +69,7 @@ const navier_script = `
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
 
-        nu = 1e-4
+        nu = 8e-5
 
         convection = (U_x @ OPS[simId]['Dx']) + (U_y @ OPS[simId]['Dy'])
         momentum = nu * OPS[simId]['Lnn'] - convection
@@ -87,7 +87,7 @@ const navier_script = `
         sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
 
-        obs_out = sol_u[0,s_idx,1]
+        obs_out = sol_u[32,s_idx,1]
         s_pred = np.zeros(${INPUT_DIM})
         if W is not None and bias is not None:
             s_pred = (obs_out @ W) + bias
@@ -95,7 +95,7 @@ const navier_script = `
         js.outputs.as_py_json()[simId].s      = s
         js.outputs.as_py_json()[simId].s_pred = s_pred.ravel()
         js.outputs.as_py_json()[simId].u_new  = sol_u
-        js.outputs.as_py_json()[simId].u_out  = obs_out
+        js.outputs.as_py_json()[simId].u_out  = np.log(np.abs(obs_out) + 1e-13)
         js.outputs.as_py_json()[simId].y_new  = y + sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].vis    = np.linalg.norm(sol_u, axis=-1)
 
@@ -113,7 +113,7 @@ const navier_script = `
         Sclip = Scent[tau:]
 
         cond = np.linalg.cond(Pclip.T @ Pclip)
-        tikhonov = 1e-8 * np.eye(Pclip.shape[1])
+        tikhonov = 1e-1 * np.eye(Pclip.shape[1])
         pinv = np.linalg.inv(Pclip.T @ Pclip + tikhonov) @ Pclip.T
         W = pinv @ Sclip
 
@@ -299,7 +299,8 @@ function evenBurners(dim, num) {
     for (let i = 0; i < num; i++) {
         let row = [];
         row = row.concat((i + 1) / (num + 1));
-        row = row.concat(Array(dim - 1).fill(0));
+        row = row.concat((i + 1) / (num + 1));
+        // row = row.concat(Array(dim - 1).fill(0));
         result[i] = row;
     }
     return result;
@@ -330,14 +331,14 @@ function logistic_map(T) {
     let r = 3.6;
     let seq = [];
     for (let t = 0; t < T; t++) {
-        seq.push(x);
+        seq.push(x * 3);
         x = r * x * (1 - x);
     }
     return seq;
 }
 
 function sequenceSourceFunction(seq) {
-    return sourceVectorFunction(INPUT_DIM, (n, i) => seq[n % seq.length])
+    return sourceVectorFunction(INPUT_DIM, (n, i) => seq[Math.round((n / 4) % seq.length)])
 }
 
 async function init() {
@@ -369,7 +370,7 @@ async function init() {
     let predictsine_graphs = [{
         canvas: 'predictsineInput',
         key: 's',
-        scale: 40,
+        scale: 20,
         scheme: 'cb-qualitative'
     }, {
         canvas: 'predictsineOutput',
