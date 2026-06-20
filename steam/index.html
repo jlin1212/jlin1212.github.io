@@ -181,13 +181,17 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
             <div class="title"><h1>Okay, but what about predicting the weather?</h1></div>
             <p>
                 Well, we've got the steam, but this isn't an engine yet. To get actual output from our pot of water, we're going to need to a little more work. To understand where I'm going with this, let's do the same inputs, but first take our pot of water and plot the intensity of burners, as well as the velocity at \(m = 9\) evenly-spaced points at the top of the water (click to start):
-                <div class="sim-wrapper">
-                    <canvas class="plot" id="reservoir" data-running="false"></canvas>
-                    <span class="sim-time">step=0</span>
+                <div class="plotted-wrapper">
+                    <div class="sim-wrapper">
+                        <canvas class="plot" id="reservoir" data-running="false"></canvas>
+                        <span class="sim-time">step=0</span>
+                    </div>
+                    <div class="graph-wrapper">
+                        <canvas class="graph" id="reservoirInput"></canvas>
+                        <canvas class="graph" id="reservoirOutput"></canvas>
+                    </div>
                 </div>
             </p>
-            <canvas class="graph" id="reservoirInput"></canvas>
-            <canvas class="graph" id="reservoirOutput"></canvas>
         </div>
         <div class="footer"></div>
     </body>
