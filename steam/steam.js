@@ -106,13 +106,14 @@ const navier_script = `
         Sclip = Scent[tau:]
 
         cond = np.linalg.cond(Pclip.T @ Pclip)
-        pinv = np.linalg.pinv(Pclip)
+        tikhonov = 1e-3 * np.eye(Pclip.shape[1])
+        pinv = np.linalg.inv(Pclip.T @ Pclip + tikhonov) @ Pclip.T
         W = pinv @ Sclip
 
         js.outputs.as_py_json()[simId].W = W
         js.outputs.as_py_json()[simId].cond = cond
-        js.outputs.as_py_json()[simId].ytarg = Sclip
-        js.outputs.as_py_json()[simId].yhat = (Pclip @ W)
+        js.outputs.as_py_json()[simId].ytarg = Sclip + Smean
+        js.outputs.as_py_json()[simId].yhat = (Pclip @ W) + Smean
         js.outputs.as_py_json()[simId].res = np.mean(np.square(Sclip - (Pclip @ W)))
 `;
 
@@ -297,23 +298,28 @@ function sourceVectorFunction(len, callback) {
     }
 }
 
+function fitReservoirData(evt) {
+    let sourceId = evt.target.dataset.source;
+    const locals = pyodide.toPy({
+        simId: sourceId,
+        P: outputs[sourceId].u_hist, 
+        S: outputs[sourceId].s_hist,
+        tau: 2
+    });
+    pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
+    document.getElementById(`${sourceId}-cond`).textContent = outputs[sourceId].cond;
+    document.getElementById(`${sourceId}-res`).textContent = outputs[sourceId].res;
+    renderArray2D(`${sourceId}-W`, outputs[sourceId].W.toJs());
+    renderArray2D(`${sourceId}-yhat`, outputs[sourceId].yhat.toJs());
+    renderArray2D(`${sourceId}-ytarg`, outputs[sourceId].ytarg.toJs());
+}
+
 function loadReservoirData(evt) {
     let sourceId = evt.target.dataset.source;
     let samples_needed = outputs[sourceId].s_hist ? RESERVOIR_CUTOFF - outputs[sourceId].s_hist.length : RESERVOIR_CUTOFF;
     if (samples_needed <= 0) {
         renderArray2D(`${sourceId}-uhist`, outputs[sourceId].u_hist);
         renderArray2D(`${sourceId}-shist`, outputs[sourceId].s_hist);
-        const locals = pyodide.toPy({
-            simId: sourceId,
-            P: outputs[sourceId].u_hist, 
-            S: outputs[sourceId].s_hist,
-            tau: 5
-        });
-        pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
-        document.getElementById(`${sourceId}-cond`).textContent = outputs[sourceId].cond;
-        renderArray2D(`${sourceId}-W`, outputs[sourceId].W.toJs());
-        renderArray2D(`${sourceId}-yhat`, outputs[sourceId].yhat.toJs());
-        renderArray2D(`${sourceId}-ytarg`, outputs[sourceId].ytarg.toJs());
     } else {
         alert(`Run for ${samples_needed} step(s) more...`);
     }
@@ -327,7 +333,7 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
-    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) + 1. );
+    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) + 1. );
     let b = evenBurners(2, INPUT_DIM);
 
     simulate('initial', 2, sfunc, b);
@@ -345,8 +351,25 @@ async function init() {
     }];
     simulate('reservoir', 2, sfunc, b, reservoir_graphs);
 
+    let predictsine_graphs = [{
+        canvas: 'predictsineInput',
+        key: 's',
+        scale: 20,
+        scheme: 'cb-qualitative'
+    }, {
+        canvas: 'predictsineOutput',
+        key: 'u_out',
+        scale: 40,
+        scheme: 'qualitative'
+    }];
+    simulate('predictsine', 2, sfunc, b, predictsine_graphs);
+
     for (const loader of document.getElementsByClassName('load')) {
         loader.addEventListener('click', loadReservoirData);
+    }
+
+    for (const loader of document.getElementsByClassName('fit')) {
+        loader.addEventListener('click', fitReservoirData);
     }
 }
 

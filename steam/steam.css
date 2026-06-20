@@ -111,7 +111,7 @@ blockquote {
     gap: 1em;
 }
 
-.load {
+.load, .fit {
     text-transform: uppercase;
     font-family: 'Google Sans', sans-serif;
     color: white;
@@ -120,11 +120,19 @@ blockquote {
     padding: 1em;
     border: none;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .load:hover {
-    cursor: pointer;
     background-color: #333;
+}
+
+.fit {
+    background-color: rgb(159, 30, 30);
+}
+
+.fit:hover {
+    background-color: rgb(193, 27, 27);
 }
 
 .plot {
