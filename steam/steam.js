@@ -36,7 +36,7 @@ const navier_script = `
         OPS[simId]['Dy']  = kron(I, D)
         OPS[simId]['Lnn'] = kronsum(L, L)
 
-    def du(simId, dims, L, u, s, b, y):
+    def du(simId, dims, L, u, s, b, y, W, bias):
         if u is jsnull: 
             u = np.zeros([*[L]*dims,dims])
         else: u = np.array(u)
@@ -61,9 +61,9 @@ const navier_script = `
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
         Fvec = 100 * Fmag.ravel(order='F')
-        W = 1e-3 * np.random.randn(L**2)
+        noise = 1e-3 * np.random.randn(L**2)
 
-        Fvec = Fvec + W
+        Fvec = Fvec + noise
 
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
@@ -86,11 +86,17 @@ const navier_script = `
         sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
 
-        js.outputs.as_py_json()[simId].s     = s
-        js.outputs.as_py_json()[simId].u_new = sol_u
-        js.outputs.as_py_json()[simId].u_out = sol_u[0,s_idx,1]
-        js.outputs.as_py_json()[simId].y_new = y + sol_u[0,s_idx,1]
-        js.outputs.as_py_json()[simId].vis   = np.linalg.norm(sol_u, axis=-1)
+        obs_out = sol_u[0,s_idx,1]
+        s_pred = np.zeros(${INPUT_DIM})
+        if W is not None and bias is not None:
+            s_pred = (obs_out @ W) + bias
+
+        js.outputs.as_py_json()[simId].s      = s
+        js.outputs.as_py_json()[simId].s_pred = s_pred
+        js.outputs.as_py_json()[simId].u_new  = sol_u
+        js.outputs.as_py_json()[simId].u_out  = obs_out
+        js.outputs.as_py_json()[simId].y_new  = y + sol_u[0,s_idx,1]
+        js.outputs.as_py_json()[simId].vis    = np.linalg.norm(sol_u, axis=-1)
 
     def fit_reservoir(simId, P, S, tau):
         P = np.array(P)
@@ -111,6 +117,7 @@ const navier_script = `
         W = pinv @ Sclip
 
         js.outputs.as_py_json()[simId].W = W
+        js.outputs.as_py_json()[simId].bias = Smean - Pmean @ W
         js.outputs.as_py_json()[simId].cond = cond
         js.outputs.as_py_json()[simId].ytarg = Sclip + Smean
         js.outputs.as_py_json()[simId].yhat = (Pclip @ W) + Smean
@@ -218,7 +225,7 @@ class GraphManager {
     }
 }
 
-function simulate(canvasId, dims, sfunc, b, graphs) {
+function simulate(canvasId, dims, sfunc, b, graphs, predict) {
     if (graphs !== undefined) {
         for (const graph of graphs) GraphManager.initGraph(graph.canvas, graph.scheme);
     }
@@ -235,32 +242,41 @@ function simulate(canvasId, dims, sfunc, b, graphs) {
     outputs[canvasId] = {};
     const locals = pyodide.toPy({ simId: canvasId, L: L });
     pyodide.runPython("init_sim(simId, L)", { locals });
-    step(canvasId, 0, dims, sfunc, b, graphs);
+    step(canvasId, 0, dims, sfunc, b, graphs, predict);
 }
 
-function step(canvasId, n, dims, sfunc, b, graphs) {
+function step(canvasId, n, dims, sfunc, b, graphs, predict) {
     let canvas = document.getElementById(canvasId);
     let isRunning = canvas.dataset.running === 'true';
 
     if (isRunning) {
         const locals = pyodide.toPy({ 
             simId: canvasId, 
-            L: L, 
+            L: L,
+            W: outputs[canvasId]['W'],
+            bias: outputs[canvasId]['bias'],
             dims: dims, 
             u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
             s: sfunc(n), b: b, 
             y: outputs[canvasId]['y_new'] ? outputs[canvasId]['y_new'] : Array(HIDDEN_DIM).fill(0)
         });
-        pyodide.runPython("du(simId, dims, L, u, s, b, y)", { locals });
+        pyodide.runPython("du(simId, dims, L, u, s, b, y, W, bias)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
 
-        if (outputs[canvasId].s_hist == null) {
-            outputs[canvasId].s_hist = [];
-            outputs[canvasId].u_hist = [];
-        }
-        if (n < 200) {
-            outputs[canvasId].s_hist.push(sfunc(n));
-            outputs[canvasId].u_hist.push(outputs[canvasId]['u_out'].toJs());
+        if (predict) {
+            if (outputs[canvasId].s_hist == null) {
+                outputs[canvasId].s_hist = [];
+                outputs[canvasId].u_hist = [];
+            }
+
+            if (outputs[canvasId].s_hist.length < RESERVOIR_CUTOFF) {
+                outputs[canvasId].s_hist.push(sfunc(n));
+                outputs[canvasId].u_hist.push(outputs[canvasId]['u_out'].toJs());
+            } else {
+                fitReservoirData(canvasId);
+                outputs[canvasId].s_hist = [];
+                outputs[canvasId].u_hist = [];
+            }
         }
 
         renderArray2D(canvasId, outputs[canvasId].vis.toJs());
@@ -274,7 +290,7 @@ function step(canvasId, n, dims, sfunc, b, graphs) {
         if (outputs[canvasId].vis == null) renderArray2D(canvasId, Array(L).fill(Array(L).fill(0)));
     }
     
-    setTimeout(step, 42, canvasId, isRunning ? n + 1 : n, dims, sfunc, b, graphs);
+    setTimeout(step, 42, canvasId, isRunning ? n + 1 : n, dims, sfunc, b, graphs, predict);
 }
 
 function evenBurners(dim, num) {
@@ -298,8 +314,7 @@ function sourceVectorFunction(len, callback) {
     }
 }
 
-function fitReservoirData(evt) {
-    let sourceId = evt.target.dataset.source;
+function fitReservoirData(sourceId) {
     const locals = pyodide.toPy({
         simId: sourceId,
         P: outputs[sourceId].u_hist, 
@@ -307,22 +322,6 @@ function fitReservoirData(evt) {
         tau: 2
     });
     pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
-    document.getElementById(`${sourceId}-cond`).textContent = outputs[sourceId].cond;
-    document.getElementById(`${sourceId}-res`).textContent = outputs[sourceId].res;
-    renderArray2D(`${sourceId}-W`, outputs[sourceId].W.toJs());
-    renderArray2D(`${sourceId}-yhat`, outputs[sourceId].yhat.toJs());
-    renderArray2D(`${sourceId}-ytarg`, outputs[sourceId].ytarg.toJs());
-}
-
-function loadReservoirData(evt) {
-    let sourceId = evt.target.dataset.source;
-    let samples_needed = outputs[sourceId].s_hist ? RESERVOIR_CUTOFF - outputs[sourceId].s_hist.length : RESERVOIR_CUTOFF;
-    if (samples_needed <= 0) {
-        renderArray2D(`${sourceId}-uhist`, outputs[sourceId].u_hist);
-        renderArray2D(`${sourceId}-shist`, outputs[sourceId].s_hist);
-    } else {
-        alert(`Run for ${samples_needed} step(s) more...`);
-    }
 }
 
 async function init() {
@@ -333,7 +332,7 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
-    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) + 1. );
+    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.04 * n) * Math.sin(0.04 * n) + 1. );
     let b = evenBurners(2, INPUT_DIM);
 
     simulate('initial', 2, sfunc, b);
@@ -361,8 +360,13 @@ async function init() {
         key: 'u_out',
         scale: 40,
         scheme: 'qualitative'
+    }, {
+        canvas: 'predictsineMapped',
+        key: 's_pred',
+        scale: 1,
+        scheme: 'cb-qualitative'
     }];
-    simulate('predictsine', 2, sfunc, b, predictsine_graphs);
+    simulate('predictsine', 2, sfunc, b, predictsine_graphs, true);
 
     for (const loader of document.getElementsByClassName('load')) {
         loader.addEventListener('click', loadReservoirData);
