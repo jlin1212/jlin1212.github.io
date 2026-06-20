@@ -4,7 +4,7 @@ const H = 9;
 const INPUT_DIM = 3;
 const HIDDEN_DIM = 9;
 const OUTPUT_DIM = 3;
-const RESERVOIR_CUTOFF = 20;
+const RESERVOIR_CUTOFF = 50;
 
 const navier_script = `
     from pyodide.ffi import jsnull
@@ -92,7 +92,7 @@ const navier_script = `
             s_pred = (obs_out @ W) + bias
 
         js.outputs.as_py_json()[simId].s      = s
-        js.outputs.as_py_json()[simId].s_pred = s_pred
+        js.outputs.as_py_json()[simId].s_pred = s_pred.ravel()
         js.outputs.as_py_json()[simId].u_new  = sol_u
         js.outputs.as_py_json()[simId].u_out  = obs_out
         js.outputs.as_py_json()[simId].y_new  = y + sol_u[0,s_idx,1]
@@ -319,7 +319,7 @@ function fitReservoirData(sourceId) {
         simId: sourceId,
         P: outputs[sourceId].u_hist, 
         S: outputs[sourceId].s_hist,
-        tau: 2
+        tau: 5
     });
     pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
 }
@@ -363,7 +363,7 @@ async function init() {
     }, {
         canvas: 'predictsineMapped',
         key: 's_pred',
-        scale: 1,
+        scale: 20,
         scheme: 'cb-qualitative'
     }];
     simulate('predictsine', 2, sfunc, b, predictsine_graphs, true);
