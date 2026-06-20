@@ -53,7 +53,9 @@ const navier_script = `
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
         Fvec = 2 * Fmag.ravel(order='F')
-        W = 1e-5 * np.random.randn(L**2, 2)
+        W = 1e-5 * np.random.randn(L**2)
+
+        Fvec = Fvec + W
 
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
@@ -154,7 +156,7 @@ class GraphManager {
             const offset = hist.offset + this.dx;
 
             if (offset > canvas.width) {
-                this.initGraph(canvasId);
+                this.initGraph(canvasId, this.hists[canvasId].scheme);
                 return;
             }
 
@@ -266,7 +268,7 @@ async function init() {
         canvas: 'reservoirInput',
         key: 's',
         scale: 20,
-        scheme: 'diverging'
+        scheme: 'cb-qualitative'
     }, {
         canvas: 'reservoirOutput',
         key: 'u_out',
