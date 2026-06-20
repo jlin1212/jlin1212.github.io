@@ -112,7 +112,7 @@ class GraphManager {
     static hists = {};
     static dx = 1;
 
-    static initGraph(canvasId) {
+    static initGraph(canvasId, scheme) {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
 
@@ -134,13 +134,14 @@ class GraphManager {
         ctx.stroke();
 
         this.hists[canvasId] = {
-            offset: 0
+            offset: 0,
+            scheme: scheme
         };
     }
 
     static graphSeries(canvasId, sample, scale) {
         if (this.hists[canvasId].palette == null) {
-            this.hists[canvasId].palette = palette('sequential', sample.length);
+            this.hists[canvasId].palette = palette(this.hists[canvasId].scheme, sample.length);
         }
 
         const canvas = document.getElementById(canvasId);
@@ -166,9 +167,7 @@ class GraphManager {
                 ctx.lineTo(offset, y_base - sample[i] * scale);
                 ctx.stroke();
             }
-            this.hists[canvasId] = {
-                offset: offset
-            }
+            this.hists[canvasId].offset = offset;
         }
 
         this.hists[canvasId].sample = sample;
@@ -180,7 +179,7 @@ const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
     if (graphs !== undefined) {
-        for (const graph of graphs) GraphManager.initGraph(graph.canvas);
+        for (const graph of graphs) GraphManager.initGraph(graph.canvas, graph.scheme);
     }
 
     document.getElementById(canvasId).addEventListener('click', function() {
@@ -256,7 +255,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) + 1. );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
@@ -264,11 +263,13 @@ async function init() {
     let reservoir_graphs = [{
         canvas: 'reservoirInput',
         key: 's',
-        scale: 20
+        scale: 20,
+        scheme: 'diverging'
     }, {
         canvas: 'reservoirOutput',
         key: 'u_out',
-        scale: 20
+        scale: 7,
+        scheme: 'qualitative'
     }];
     simulate(pyodide, 'reservoir', sim_dims, sfunc, b, reservoir_graphs);
 }

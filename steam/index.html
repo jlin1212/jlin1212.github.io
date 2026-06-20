@@ -193,6 +193,7 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                     </div>
                 </div>
             </p>
+            <p>Notice that our sleepy little sine waves have been transformed into a chaotic mess by the boiling pot. The idea is that by sampling the surface of the water, we can use this fact to generate a highly nonlinear mapping from \(\mathbb{R}^\ell \to \mathbb{R}^m\)! Another way to think of it is this: the pot acts as a preprocessor for much weaker classifiers that come after it. In our case we're going to use the weakest classifier of all: a simple linear transformation.</p>
         </div>
         <div class="footer"></div>
     </body>
