@@ -4,7 +4,7 @@ const H = 9;
 const INPUT_DIM = 3;
 const HIDDEN_DIM = 5;
 const OUTPUT_DIM = 3;
-const RESERVOIR_CUTOFF = 500;
+const RESERVOIR_CUTOFF = 50;
 
 const navier_script = `
     from pyodide.ffi import jsnull
@@ -45,6 +45,7 @@ const navier_script = `
 
         s_idx = (np.arange(${HIDDEN_DIM}) + 1.) / (${HIDDEN_DIM} + 1)
         s_idx = (s_idx * L).astype(int)
+        np.random.shuffle(s_idx)
 
         b = np.expand_dims(b, tuple(range(1, dims+1)))
         
@@ -74,7 +75,7 @@ const navier_script = `
         momentum = nu * OPS[simId]['Lnn'] - convection
         zeros = momentum * 0.
 
-        ns_sys = 30 * block_array([
+        ns_sys = 40 * block_array([
             [momentum,         zeros,            OPS[simId]['Dx']],
             [zeros,            momentum,         OPS[simId]['Dy']],
             [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
@@ -112,7 +113,7 @@ const navier_script = `
         Sclip = Scent[tau:]
 
         cond = np.linalg.cond(Pclip.T @ Pclip)
-        tikhonov = 1e-3 * np.eye(Pclip.shape[1])
+        tikhonov = 1e-8 * np.eye(Pclip.shape[1])
         pinv = np.linalg.inv(Pclip.T @ Pclip + tikhonov) @ Pclip.T
         W = pinv @ Sclip
 
@@ -319,9 +320,24 @@ function fitReservoirData(sourceId) {
         simId: sourceId,
         P: outputs[sourceId].u_hist, 
         S: outputs[sourceId].s_hist,
-        tau: 5
+        tau: 10
     });
     pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
+}
+
+function logistic_map(T) {
+    let x = 0.5;
+    let r = 3.6;
+    let seq = [];
+    for (let t = 0; t < T; t++) {
+        seq.push(x);
+        x = r * x * (1 - x);
+    }
+    return seq;
+}
+
+function sequenceSourceFunction(seq) {
+    return sourceVectorFunction(INPUT_DIM, (n, i) => seq[n % seq.length])
 }
 
 async function init() {
@@ -332,7 +348,7 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
-    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(2.5 * i + 0.01 * n) * Math.sin(0.01 * n) + 1. );
+    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(2.5 * i + 0.1 * n) * Math.sin(0.1 * n));
     let b = evenBurners(2, INPUT_DIM);
 
     simulate('initial', 2, sfunc, b);
@@ -353,12 +369,12 @@ async function init() {
     let predictsine_graphs = [{
         canvas: 'predictsineInput',
         key: 's',
-        scale: 20,
+        scale: 40,
         scheme: 'cb-qualitative'
     }, {
         canvas: 'predictsineOutput',
         key: 'u_out',
-        scale: 20,
+        scale: 10,
         scheme: 'qualitative'
     }, {
         canvas: 'predictsineMapped',
@@ -366,7 +382,7 @@ async function init() {
         scale: 40,
         scheme: 'cb-qualitative'
     }];
-    simulate('predictsine', 2, sfunc, b, predictsine_graphs, true);
+    simulate('predictsine', 2, sequenceSourceFunction(logistic_map(1000)), b, predictsine_graphs, true);
 
     for (const loader of document.getElementsByClassName('load')) {
         loader.addEventListener('click', loadReservoirData);
