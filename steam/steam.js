@@ -119,8 +119,16 @@ class GraphManager {
         canvas.height = 200;
         canvas.width = 500;
 
+        for (let x = 0; x <= canvas.width; x += (canvas.width / 20)) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#bbb';
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+
         ctx.beginPath();
-        ctx.strokeStyle = '#aaa';
+        ctx.strokeStyle = '#888';
         ctx.moveTo(0, canvas.height / 2);
         ctx.lineTo(canvas.width, canvas.height / 2);
         ctx.stroke();
