@@ -139,8 +139,14 @@ class GraphManager {
     }
 
     static graphSeries(canvasId, sample, scale) {
+        if (this.hists[canvasId].palette == null) {
+            this.hists[canvasId].palette = palette('sequential', sample.length);
+        }
+
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
+
+        ctx.lineWidth = 2;
 
         if (this.hists[canvasId] != null && this.hists[canvasId].sample != null) {
             let hist = this.hists[canvasId];
@@ -156,7 +162,7 @@ class GraphManager {
             for (let i = 0; i < sample.length; i++) {
                 ctx.beginPath();
                 ctx.moveTo(hist.offset, y_base - hist.sample[i] * scale);
-                ctx.strokeStyle = 'red';
+                ctx.strokeStyle = `#${this.hists[canvasId].palette[i]}`;
                 ctx.lineTo(offset, y_base - sample[i] * scale);
                 ctx.stroke();
             }
