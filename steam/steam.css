@@ -96,3 +96,7 @@ blockquote {
     color: white;
     top: 8px; left: 8px;
 }
+
+.graph {
+    border: 1px solid #777;
+}

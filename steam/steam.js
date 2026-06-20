@@ -34,9 +34,9 @@ const navier_script = `
         else: u = np.array(u)
         b = np.array(b)
         s = np.array(s)
-        s_idx = np.arange(s.shape[0])
 
-        print(s_idx)
+        s_idx = (np.arange(9) + 1.) / (9 + 1)
+        s_idx = (s_idx * L).astype(int)
 
         b = np.expand_dims(b, tuple(range(1, dims+1)))
         
@@ -78,7 +78,7 @@ const navier_script = `
 
         js.outputs.as_py_json()[simId].s     = s
         js.outputs.as_py_json()[simId].u_new = sol_u
-        js.outputs.as_py_json()[simId].u_out = sol_u[0,:,1]
+        js.outputs.as_py_json()[simId].u_out = sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].vis   = normalize(np.linalg.norm(sol_u, axis=-1))
 `;
 
@@ -108,10 +108,61 @@ function renderArray2D(canvasId, array) {
     }
 }
 
+class GraphManager {
+    static hists = {};
+    static dx = 1;
+
+    static initGraphs(graphs) {
+        for (const graph of graphs) {
+            const canvas = document.getElementById(graph.canvas);
+            const ctx = canvas.getContext('2d');
+
+            canvas.height = 200;
+            canvas.width = 500;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#aaa';
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            this.hists[graph.canvas] = {
+                offset: this.dx
+            };
+        }
+    }
+
+    static graphSeries(canvasId, sample, scale) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+
+        if (this.hists[canvasId] != null && this.hists[canvasId].sample != null) {
+            let hist = this.hists[canvasId];
+            const offset = hist.offset + this.dx;
+            const y_base = canvas.height / 2;
+
+            for (let i = 0; i < sample.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(hist.offset, y_base - hist.sample[i] * scale);
+                ctx.strokeStyle = 'red';
+                ctx.lineTo(offset, y_base - sample[i] * scale);
+                ctx.stroke();
+            }
+            this.hists[canvasId] = {
+                offset: offset
+            }
+        }
+
+        this.hists[canvasId].sample = sample;
+    }
+}
+
 globalThis.outputs = {};
 const L = 64;
 
 function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
+    if (graphs !== undefined) GraphManager.initGraphs(graphs);
+
     document.getElementById(canvasId).addEventListener('click', function() {
         let isRunning = this.dataset.running === 'true';
         this.dataset.running = (!isRunning).toString();
@@ -131,7 +182,6 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
     let isRunning = canvas.dataset.running === 'true';
 
     if (isRunning) {
-        console.log('calling python anyway', isRunning, n)
         const locals = pyodide.toPy({ 
             simId: canvasId, 
             L: L, 
@@ -145,6 +195,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
         renderArray2D(canvasId, outputs[canvasId].vis.toJs());
         if (graphs !== undefined) {
             for (const graph of graphs) {
+                GraphManager.graphSeries(graph.canvas, outputs[canvasId][graph.key].toJs(), graph.scale);
             }
         }
     } else {
@@ -191,9 +242,13 @@ async function init() {
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
 
     let reservoir_graphs = [{
-        key: 's'
+        canvas: 'reservoirInput',
+        key: 's',
+        scale: 20
     }, {
-        key: 'u_out'
+        canvas: 'reservoirOutput',
+        key: 'u_out',
+        scale: 40
     }];
     simulate(pyodide, 'reservoir', sim_dims, sfunc, b, reservoir_graphs);
 }
