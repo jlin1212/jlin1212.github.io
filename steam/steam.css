@@ -127,6 +127,10 @@ blockquote {
     background-color: #333;
 }
 
+.plot {
+    transform: scale(-1);
+}
+
 .hplots {
     display: flex;
     flex-direction: row;

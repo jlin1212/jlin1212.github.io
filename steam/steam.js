@@ -102,7 +102,7 @@ function renderArray2D(canvasId, array) {
     canvas.height = 320;
     canvas.width = 320 * (W / H);
 
-    let pixelWidth = canvas.width / W;
+    let pixelWidth = canvas.width / (W);
 
     let amin = Infinity;
     let amax = -Infinity;
@@ -117,7 +117,7 @@ function renderArray2D(canvasId, array) {
         for (let j = 0; j < W; j++) {
             let shade = (array[i][j] - amin) / (amax - amin) * 255;
             ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
-            ctx.fillRect(canvas.width - pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
+            ctx.fillRect(pixelWidth * j, pixelWidth * i, pixelWidth, pixelWidth);
         }
     }
 
