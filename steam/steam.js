@@ -256,7 +256,7 @@ async function init() {
 
     let sim_dims = 2;
     let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.01 * n) * Math.sin(0.01 * n) );
+    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) );
     let b = evenBurners(sim_dims, seq_length);
 
     simulate(pyodide, 'initial', sim_dims, sfunc, b);
