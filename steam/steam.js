@@ -2,6 +2,7 @@ globalThis.outputs = {};
 const L = 64;
 const H = 9;
 const INPUT_DIM = 3;
+const HIDDEN_DIM = 9;
 const OUTPUT_DIM = 3;
 const RESERVOIR_CUTOFF = 20;
 
@@ -42,7 +43,7 @@ const navier_script = `
         b = np.array(b)
         s = np.array(s)
 
-        s_idx = (np.arange(${OUTPUT_DIM}) + 1.) / (${OUTPUT_DIM} + 1)
+        s_idx = (np.arange(${HIDDEN_DIM}) + 1.) / (${HIDDEN_DIM} + 1)
         s_idx = (s_idx * L).astype(int)
 
         b = np.expand_dims(b, tuple(range(1, dims+1)))
@@ -59,7 +60,7 @@ const navier_script = `
 
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
-        Fvec = 2 * Fmag.ravel(order='F')
+        Fvec = 100 * Fmag.ravel(order='F')
         W = 1e-3 * np.random.randn(L**2)
 
         Fvec = Fvec + W
@@ -67,7 +68,7 @@ const navier_script = `
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
 
-        nu = 1e-5
+        nu = 1e-4
 
         convection = (U_x @ OPS[simId]['Dx']) + (U_y @ OPS[simId]['Dy'])
         momentum = nu * OPS[simId]['Lnn'] - convection
@@ -90,6 +91,29 @@ const navier_script = `
         js.outputs.as_py_json()[simId].u_out = sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].y_new = y + sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].vis   = np.linalg.norm(sol_u, axis=-1)
+
+    def fit_reservoir(simId, P, S, tau):
+        P = np.array(P)
+        S = np.array(S)
+
+        Pmean = np.mean(P, axis=0, keepdims=True)
+        Smean = np.mean(S, axis=0, keepdims=True)
+
+        Pcent = P - Pmean
+        Scent = S - Smean
+
+        Pclip = Pcent[:-tau]
+        Sclip = Scent[tau:]
+
+        cond = np.linalg.cond(Pclip.T @ Pclip)
+        pinv = np.linalg.pinv(Pclip)
+        W = pinv @ Sclip
+
+        js.outputs.as_py_json()[simId].W = W
+        js.outputs.as_py_json()[simId].cond = cond
+        js.outputs.as_py_json()[simId].ytarg = Sclip
+        js.outputs.as_py_json()[simId].yhat = (Pclip @ W)
+        js.outputs.as_py_json()[simId].res = np.mean(np.square(Sclip - (Pclip @ W)))
 `;
 
 function renderArray2D(canvasId, array) {
@@ -193,7 +217,7 @@ class GraphManager {
     }
 }
 
-function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
+function simulate(canvasId, dims, sfunc, b, graphs) {
     if (graphs !== undefined) {
         for (const graph of graphs) GraphManager.initGraph(graph.canvas, graph.scheme);
     }
@@ -210,10 +234,10 @@ function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
     outputs[canvasId] = {};
     const locals = pyodide.toPy({ simId: canvasId, L: L });
     pyodide.runPython("init_sim(simId, L)", { locals });
-    step(pyodide, canvasId, 0, dims, sfunc, b, graphs);
+    step(canvasId, 0, dims, sfunc, b, graphs);
 }
 
-function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
+function step(canvasId, n, dims, sfunc, b, graphs) {
     let canvas = document.getElementById(canvasId);
     let isRunning = canvas.dataset.running === 'true';
 
@@ -224,7 +248,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
             dims: dims, 
             u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
             s: sfunc(n), b: b, 
-            y: outputs[canvasId]['y_new'] ? outputs[canvasId]['y_new'] : Array(OUTPUT_DIM).fill(0)
+            y: outputs[canvasId]['y_new'] ? outputs[canvasId]['y_new'] : Array(HIDDEN_DIM).fill(0)
         });
         pyodide.runPython("du(simId, dims, L, u, s, b, y)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
@@ -249,7 +273,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
         if (outputs[canvasId].vis == null) renderArray2D(canvasId, Array(L).fill(Array(L).fill(0)));
     }
     
-    setTimeout(step, 42, pyodide, canvasId, isRunning ? n + 1 : n, dims, sfunc, b, graphs);
+    setTimeout(step, 42, canvasId, isRunning ? n + 1 : n, dims, sfunc, b, graphs);
 }
 
 function evenBurners(dim, num) {
@@ -277,15 +301,26 @@ function loadReservoirData(evt) {
     let sourceId = evt.target.dataset.source;
     let samples_needed = outputs[sourceId].s_hist ? RESERVOIR_CUTOFF - outputs[sourceId].s_hist.length : RESERVOIR_CUTOFF;
     if (samples_needed <= 0) {
-        renderArray2D('reservoir-uhist', outputs[sourceId].u_hist);
-        renderArray2D('reservoir-shist', outputs[sourceId].s_hist);
+        renderArray2D(`${sourceId}-uhist`, outputs[sourceId].u_hist);
+        renderArray2D(`${sourceId}-shist`, outputs[sourceId].s_hist);
+        const locals = pyodide.toPy({
+            simId: sourceId,
+            P: outputs[sourceId].u_hist, 
+            S: outputs[sourceId].s_hist,
+            tau: 5
+        });
+        pyodide.runPython("fit_reservoir(simId, P, S, tau)", { locals });
+        document.getElementById(`${sourceId}-cond`).textContent = outputs[sourceId].cond;
+        renderArray2D(`${sourceId}-W`, outputs[sourceId].W.toJs());
+        renderArray2D(`${sourceId}-yhat`, outputs[sourceId].yhat.toJs());
+        renderArray2D(`${sourceId}-ytarg`, outputs[sourceId].ytarg.toJs());
     } else {
         alert(`Run for ${samples_needed} step(s) more...`);
     }
 }
 
 async function init() {
-    let pyodide = await loadPyodide();
+    globalThis.pyodide = await loadPyodide();
     await pyodide.loadPackage('numpy');
     await pyodide.loadPackage('scipy');
     pyodide.runPython(`import numpy as np`);
@@ -295,7 +330,7 @@ async function init() {
     let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) + 1. );
     let b = evenBurners(2, INPUT_DIM);
 
-    simulate(pyodide, 'initial', 2, sfunc, b);
+    simulate('initial', 2, sfunc, b);
 
     let reservoir_graphs = [{
         canvas: 'reservoirInput',
@@ -305,10 +340,10 @@ async function init() {
     }, {
         canvas: 'reservoirOutput',
         key: 'u_out',
-        scale: 6,
+        scale: 40,
         scheme: 'qualitative'
     }];
-    simulate(pyodide, 'reservoir', 2, sfunc, b, reservoir_graphs);
+    simulate('reservoir', 2, sfunc, b, reservoir_graphs);
 
     for (const loader of document.getElementsByClassName('load')) {
         loader.addEventListener('click', loadReservoirData);

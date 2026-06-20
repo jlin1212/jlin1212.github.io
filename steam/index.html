@@ -239,6 +239,14 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 <canvas class="plot" id="reservoir-uhist"></canvas>
                 <canvas class="plot" id="reservoir-shist"></canvas>
             </div>
+            <p>Well, we've got our input data matrix \(\mathbf{P}\) on the left, and the output values \(\mathbf{S}\) on the right. We can get a sense of the quality of this reservoir by taking a look at the condition number of \(P\). In this case, that number is <b id="reservoir-cond">not yet computed</b>. To prepare for least squares, we just need to remove the last \(\tau\) rows of \(\mathbf{P}\) and the first \(\tau\) rows of \(\mathbf{S}\).</p>
+            <p>
+                <div class="hplots">
+                    <canvas class="plot" id="reservoir-W"></canvas>
+                    <canvas class="plot" id="reservoir-yhat"></canvas>
+                    <canvas class="plot" id="reservoir-ytarg"></canvas>
+                </div>
+            </p>
         </div>
         <div class="footer"></div>
     </body>
