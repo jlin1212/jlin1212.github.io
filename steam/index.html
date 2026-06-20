@@ -233,7 +233,12 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 $$
                 for some vector \(\beta\).
             </p>
-            <p>Well, let's try applying the theory to something very simple: predicting our sinusoidal forcing.</p>
+            <p>Well, let's try applying the theory to something very simple: predicting our sinusoidal forcing. If you haven't done so already, go up and run the reservoir simulation for about 200 timesteps. The program will store the simulation data and prepare it for the next step. When you think you have enough data, click the button below:</p>
+            <button class="load" data-source="reservoir">Load data</button>
+            <div class="hplots">
+                <canvas class="plot" id="reservoir-uhist"></canvas>
+                <canvas class="plot" id="reservoir-shist"></canvas>
+            </div>
         </div>
         <div class="footer"></div>
     </body>

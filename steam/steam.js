@@ -3,6 +3,7 @@ const L = 64;
 const H = 9;
 const INPUT_DIM = 3;
 const OUTPUT_DIM = 3;
+const RESERVOIR_CUTOFF = 20;
 
 const navier_script = `
     from pyodide.ffi import jsnull
@@ -88,7 +89,7 @@ const navier_script = `
         js.outputs.as_py_json()[simId].u_new = sol_u
         js.outputs.as_py_json()[simId].u_out = sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].y_new = y + sol_u[0,s_idx,1]
-        js.outputs.as_py_json()[simId].vis   = normalize(np.linalg.norm(sol_u, axis=-1))
+        js.outputs.as_py_json()[simId].vis   = np.linalg.norm(sol_u, axis=-1)
 `;
 
 function renderArray2D(canvasId, array) {
@@ -103,9 +104,18 @@ function renderArray2D(canvasId, array) {
 
     let pixelWidth = canvas.width / W;
 
+    let amin = Infinity;
+    let amax = -Infinity;
     for (let i = 0; i < H; i++) {
         for (let j = 0; j < W; j++) {
-            let shade = array[i][j] * 255;
+            if (array[i][j] < amin) amin = array[i][j];
+            if (array[i][j] > amax) amax = array[i][j];
+        }
+    }
+
+    for (let i = 0; i < H; i++) {
+        for (let j = 0; j < W; j++) {
+            let shade = (array[i][j] - amin) / (amax - amin) * 255;
             ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
             ctx.fillRect(canvas.width - pixelWidth * j, canvas.height - (pixelWidth * i), pixelWidth, pixelWidth);
         }
@@ -188,6 +198,7 @@ function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
         for (const graph of graphs) GraphManager.initGraph(graph.canvas, graph.scheme);
     }
 
+    document.getElementById(canvasId).style.cursor = 'pointer';
     document.getElementById(canvasId).addEventListener('click', function() {
         let isRunning = this.dataset.running === 'true';
         this.dataset.running = (!isRunning).toString();
@@ -218,12 +229,20 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
         pyodide.runPython("du(simId, dims, L, u, s, b, y)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
 
+        if (outputs[canvasId].s_hist == null) {
+            outputs[canvasId].s_hist = [];
+            outputs[canvasId].u_hist = [];
+        }
+        if (n < 200) {
+            outputs[canvasId].s_hist.push(sfunc(n));
+            outputs[canvasId].u_hist.push(outputs[canvasId]['u_out'].toJs());
+        }
+
         renderArray2D(canvasId, outputs[canvasId].vis.toJs());
         outputs[canvasId].vis.destroy();
         if (graphs !== undefined) {
             for (const graph of graphs) {
                 GraphManager.graphSeries(graph.canvas, outputs[canvasId][graph.key].toJs(), graph.scale);
-                // outputs[canvasId][graph.key].destroy();
             }
         }
     } else {
@@ -254,6 +273,17 @@ function sourceVectorFunction(len, callback) {
     }
 }
 
+function loadReservoirData(evt) {
+    let sourceId = evt.target.dataset.source;
+    let samples_needed = outputs[sourceId].s_hist ? RESERVOIR_CUTOFF - outputs[sourceId].s_hist.length : RESERVOIR_CUTOFF;
+    if (samples_needed <= 0) {
+        renderArray2D('reservoir-uhist', outputs[sourceId].u_hist);
+        renderArray2D('reservoir-shist', outputs[sourceId].s_hist);
+    } else {
+        alert(`Run for ${samples_needed} step(s) more...`);
+    }
+}
+
 async function init() {
     let pyodide = await loadPyodide();
     await pyodide.loadPackage('numpy');
@@ -279,6 +309,10 @@ async function init() {
         scheme: 'qualitative'
     }];
     simulate(pyodide, 'reservoir', 2, sfunc, b, reservoir_graphs);
+
+    for (const loader of document.getElementsByClassName('load')) {
+        loader.addEventListener('click', loadReservoirData);
+    }
 }
 
 window.onload = init;

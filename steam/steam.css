@@ -38,10 +38,6 @@ body {
     padding: 10em;
 }
 
-.plot {
-    cursor: pointer;
-}
-
 a:hover {
     font-weight: bold;
 }
@@ -112,5 +108,27 @@ blockquote {
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 1em;
+}
+
+.load {
+    text-transform: uppercase;
+    font-family: 'Google Sans', sans-serif;
+    color: white;
+    background-color: black;
+    user-select: none;
+    padding: 1em;
+    border: none;
+    font-weight: bold;
+}
+
+.load:hover {
+    cursor: pointer;
+    background-color: #333;
+}
+
+.hplots {
+    display: flex;
+    flex-direction: row;
     gap: 1em;
 }
