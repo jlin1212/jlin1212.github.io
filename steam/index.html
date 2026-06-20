@@ -194,6 +194,46 @@ convect_bar = np.fft.fftn(convect_real, axes=[0,1,2])              # (L, L, L, 3
                 </div>
             </p>
             <p>Notice that our sleepy little sine waves have been transformed into a chaotic mess by the boiling pot. The idea is that by sampling the surface of the water, we can use this fact to generate a highly nonlinear mapping from \(\mathbb{R}^\ell \to \mathbb{R}^m\)! In this case, by sampling from each of the 9 sites we measure, we turn a 3-dimensional input into a 9-dimensional embedding. We're almost done: we just have to compute a mapping from this embedding to the solution space we care about.</p>
+            <p>
+                Let's call the water surface profile at some given time \(\mathbf{p}^n\), as summarized by our 9 sensors. Then given \(\mathbf{p}^n\), which we surmise is a function of \(\mathbf{s}^{n,n-1,\ldots}\), can we predict \(\mathbf{s}^{n+\tau}\) for some interval \(\tau\)? Our best stab at this is to do ordinary least squares: first, let's assemble our samples, which start at time \(t_0\), into two matrices:
+                $$
+                    \mathbf{P} = \begin{bmatrix}
+                        \mathbf{p}^{t_0} & \ldots & \mathbf{p}^T
+                    \end{bmatrix}^\top\qquad
+                    \mathbf{S} = \begin{bmatrix}
+                        \mathbf{s}^{t_0+\tau} & \ldots & \mathbf{s}^{T + \tau}
+                    \end{bmatrix}^\top
+                $$
+                where \(T\) is the time we end at. Note that both of our matrices are ``tall" matrices, where the number of rows is far greater than the number of columns. Now for the least squares: we want to find a mapping so that
+                $$
+                    \mathbf{PW} = \mathbf{S}
+                $$
+                If you're familiar with ordinary least squares, you know what comes next, but I'll include it for completeness. Let's assume that the column rank of the matrix is full, i.e. that the columns of \(P\) are linearly independent. Then even if \(\mathbf{P}\) doesn't have an inverse, we can actually compute \((\mathbf{P}^\top\mathbf{P})^{-1}\). Then we can do the following rather funny sequence of multiplications:
+                $$
+                \begin{align}
+                    \mathbf{PW} &= \mathbf{S} \\
+                    \mathbf{P}^\top\mathbf{PW} &= \mathbf{P}^\top\mathbf{S} \\
+                    (\mathbf{P}^\top\mathbf{P})^{-1}\mathbf{P}^\top\mathbf{PW} &= (\mathbf{P}^\top\mathbf{P})^{-1}\mathbf{P}^\top\mathbf{S} \\
+                    \mathbf{W} &= \underbrace{(\mathbf{P}^\top\mathbf{P})^{-1}\mathbf{P}^\top}_\text{pseudoinverse}\mathbf{S}
+                \end{align}
+                $$
+                The pseudoinverse is so called because we've kind of solved the matrix equation for \(\mathbf{W}\) by "inverting" \(\mathbf{P}\), in the sense that we multiplied it with an operator that turns it into the identity.
+            </p>
+            <p>
+                In practice, we might be unlucky and \(\mathbf{P}^\top\mathbf{P}\) might be near-noninvertible, if there was correlation after all between the columns. A matrix is noninvertible when one of its eigenvalues is 0, so actually a trick we can use is to instead say
+                $$
+                    \mathbf{W} \approx (\mathbf{P}^\top\mathbf{P} + \lambda\mathbf{I})^{-1}\mathbf{P}^\top\mathbf{S}
+                $$
+                Now the minimum eigenvalue of the pseudoinverse is \(\lambda\). In practice, this trick is called Tikhonov regularization, or ridge regression. You can think of its effect as a "smoothing" of the regression fit.
+            </p>
+            <p>
+                Finally, I'm going to point out quickly that the tacit assumption is that \(\mathbf{P}, \mathbf{S}\) are <i>centered</i>; that is, that the row-wise average of each matrix is exactly \(\mathbf{0}\). Otherwise, we would need to include a bias term and our mapping would become
+                $$
+                    \mathbf{W} \approx (\mathbf{P}^\top\mathbf{P} + \lambda\mathbf{I})^{-1}\mathbf{P}^\top\mathbf{S} + \mathbf{\beta}
+                $$
+                for some vector \(\beta\).
+            </p>
+            <p>Well, let's try applying the theory to something very simple: predicting our sinusoidal forcing.</p>
         </div>
         <div class="footer"></div>
     </body>

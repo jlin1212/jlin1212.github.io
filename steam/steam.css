@@ -99,6 +99,7 @@ blockquote {
 
 .graph {
     border: 1px solid #777;
+    background-color: rgb(255, 253, 242);
 }
 
 .graph-wrapper {

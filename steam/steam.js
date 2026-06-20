@@ -1,3 +1,9 @@
+globalThis.outputs = {};
+const L = 64;
+const H = 9;
+const INPUT_DIM = 3;
+const OUTPUT_DIM = 3;
+
 const navier_script = `
     from pyodide.ffi import jsnull
     from scipy.sparse import block_array, diags_array, eye_array, kron, kronsum
@@ -28,14 +34,14 @@ const navier_script = `
         OPS[simId]['Dy']  = kron(I, D)
         OPS[simId]['Lnn'] = kronsum(L, L)
 
-    def du(simId, dims, L, u, s, b):
+    def du(simId, dims, L, u, s, b, y):
         if u is jsnull: 
             u = np.zeros([*[L]*dims,dims])
         else: u = np.array(u)
         b = np.array(b)
         s = np.array(s)
 
-        s_idx = (np.arange(9) + 1.) / (9 + 1)
+        s_idx = (np.arange(${OUTPUT_DIM}) + 1.) / (${OUTPUT_DIM} + 1)
         s_idx = (s_idx * L).astype(int)
 
         b = np.expand_dims(b, tuple(range(1, dims+1)))
@@ -53,7 +59,7 @@ const navier_script = `
         Fmag = np.expand_dims(s, tuple(range(1, dims+1))) * bgauss
         Fmag = np.sum(Fmag, axis=0)
         Fvec = 2 * Fmag.ravel(order='F')
-        W = 1e-5 * np.random.randn(L**2)
+        W = 1e-3 * np.random.randn(L**2)
 
         Fvec = Fvec + W
 
@@ -81,6 +87,7 @@ const navier_script = `
         js.outputs.as_py_json()[simId].s     = s
         js.outputs.as_py_json()[simId].u_new = sol_u
         js.outputs.as_py_json()[simId].u_out = sol_u[0,s_idx,1]
+        js.outputs.as_py_json()[simId].y_new = y + sol_u[0,s_idx,1]
         js.outputs.as_py_json()[simId].vis   = normalize(np.linalg.norm(sol_u, axis=-1))
 `;
 
@@ -92,7 +99,7 @@ function renderArray2D(canvasId, array) {
     const ctx = canvas.getContext('2d');
 
     canvas.height = 320;
-    canvas.width = 320;
+    canvas.width = 320 * (W / H);
 
     let pixelWidth = canvas.width / W;
 
@@ -112,7 +119,7 @@ function renderArray2D(canvasId, array) {
 
 class GraphManager {
     static hists = {};
-    static dx = 1;
+    static dx = 2;
 
     static initGraph(canvasId, scheme) {
         const canvas = document.getElementById(canvasId);
@@ -176,9 +183,6 @@ class GraphManager {
     }
 }
 
-globalThis.outputs = {};
-const L = 64;
-
 function simulate(pyodide, canvasId, dims, sfunc, b, graphs) {
     if (graphs !== undefined) {
         for (const graph of graphs) GraphManager.initGraph(graph.canvas, graph.scheme);
@@ -208,9 +212,10 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
             L: L, 
             dims: dims, 
             u: (n > 0) ? outputs[canvasId]['u_new'] : null, 
-            s: sfunc(n), b: b
+            s: sfunc(n), b: b, 
+            y: outputs[canvasId]['y_new'] ? outputs[canvasId]['y_new'] : Array(OUTPUT_DIM).fill(0)
         });
-        pyodide.runPython("du(simId, dims, L, u, s, b)", { locals });
+        pyodide.runPython("du(simId, dims, L, u, s, b, y)", { locals });
         canvas.nextElementSibling.textContent = `step=${n}`;
 
         renderArray2D(canvasId, outputs[canvasId].vis.toJs());
@@ -218,7 +223,7 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
         if (graphs !== undefined) {
             for (const graph of graphs) {
                 GraphManager.graphSeries(graph.canvas, outputs[canvasId][graph.key].toJs(), graph.scale);
-                outputs[canvasId][graph.key].destroy();
+                // outputs[canvasId][graph.key].destroy();
             }
         }
     } else {
@@ -257,12 +262,10 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
-    let sim_dims = 2;
-    let seq_length = 3;
-    let sfunc = sourceVectorFunction(seq_length, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) + 1. );
-    let b = evenBurners(sim_dims, seq_length);
+    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.07 * n) * Math.sin(0.07 * n) + 1. );
+    let b = evenBurners(2, INPUT_DIM);
 
-    simulate(pyodide, 'initial', sim_dims, sfunc, b);
+    simulate(pyodide, 'initial', 2, sfunc, b);
 
     let reservoir_graphs = [{
         canvas: 'reservoirInput',
@@ -272,10 +275,10 @@ async function init() {
     }, {
         canvas: 'reservoirOutput',
         key: 'u_out',
-        scale: 7,
+        scale: 6,
         scheme: 'qualitative'
     }];
-    simulate(pyodide, 'reservoir', sim_dims, sfunc, b, reservoir_graphs);
+    simulate(pyodide, 'reservoir', 2, sfunc, b, reservoir_graphs);
 }
 
 window.onload = init;
