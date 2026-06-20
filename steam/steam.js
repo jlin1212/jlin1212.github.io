@@ -2,9 +2,9 @@ globalThis.outputs = {};
 const L = 64;
 const H = 9;
 const INPUT_DIM = 3;
-const HIDDEN_DIM = 9;
+const HIDDEN_DIM = 5;
 const OUTPUT_DIM = 3;
-const RESERVOIR_CUTOFF = 50;
+const RESERVOIR_CUTOFF = 500;
 
 const navier_script = `
     from pyodide.ffi import jsnull
@@ -74,7 +74,7 @@ const navier_script = `
         momentum = nu * OPS[simId]['Lnn'] - convection
         zeros = momentum * 0.
 
-        ns_sys = 20 * block_array([
+        ns_sys = 30 * block_array([
             [momentum,         zeros,            OPS[simId]['Dx']],
             [zeros,            momentum,         OPS[simId]['Dy']],
             [OPS[simId]['Dx'], OPS[simId]['Dy'], zeros]
@@ -332,7 +332,7 @@ async function init() {
     pyodide.runPython(navier_script);
     document.getElementById('loading').style.opacity = 0;
 
-    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(0.5 * i + 0.04 * n) * Math.sin(0.04 * n) + 1. );
+    let sfunc = sourceVectorFunction(INPUT_DIM, (n, i) => Math.sin(2.5 * i + 0.01 * n) * Math.sin(0.01 * n) + 1. );
     let b = evenBurners(2, INPUT_DIM);
 
     simulate('initial', 2, sfunc, b);
@@ -358,12 +358,12 @@ async function init() {
     }, {
         canvas: 'predictsineOutput',
         key: 'u_out',
-        scale: 40,
+        scale: 20,
         scheme: 'qualitative'
     }, {
         canvas: 'predictsineMapped',
         key: 's_pred',
-        scale: 20,
+        scale: 40,
         scheme: 'cb-qualitative'
     }];
     simulate('predictsine', 2, sfunc, b, predictsine_graphs, true);
