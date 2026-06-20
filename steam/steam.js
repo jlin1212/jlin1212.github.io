@@ -212,9 +212,11 @@ function step(pyodide, canvasId, n, dims, sfunc, b, graphs) {
         canvas.nextElementSibling.textContent = `step=${n}`;
 
         renderArray2D(canvasId, outputs[canvasId].vis.toJs());
+        outputs[canvasId].vis.destroy();
         if (graphs !== undefined) {
             for (const graph of graphs) {
                 GraphManager.graphSeries(graph.canvas, outputs[canvasId][graph.key].toJs(), graph.scale);
+                outputs[canvasId][graph.key].destroy();
             }
         }
     } else {
