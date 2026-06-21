@@ -64,7 +64,7 @@ const navier_script = `
         Fvec = 100 * Fmag.ravel(order='F')
         noise = 1e-3 * np.random.randn(L**2)
 
-        Fvec = Fvec + noise
+        Fvec = Fvec #+ noise
 
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
@@ -86,6 +86,8 @@ const navier_script = `
 
         sol_ux, sol_uy, sol_p = sol[:L**2], sol[L**2:2*L**2], sol[2*L**2:]
         sol_u = np.stack([sol_ux.reshape((L, L), order='F'), sol_uy.reshape((L, L), order='F')], axis=-1)
+
+        print(bias)
 
         obs_out = sol_u[32,s_idx,1]
         s_pred = np.zeros(${INPUT_DIM})
@@ -113,16 +115,15 @@ const navier_script = `
         Sclip = Scent[tau:]
 
         cond = np.linalg.cond(Pclip.T @ Pclip)
-        tikhonov = 1e-1 * np.eye(Pclip.shape[1])
+        tikhonov = 0 * np.eye(Pclip.shape[1])
         pinv = np.linalg.inv(Pclip.T @ Pclip + tikhonov) @ Pclip.T
         W = pinv @ Sclip
+
+        print(np.mean(np.square(Pclip @ W - Sclip)))
 
         js.outputs.as_py_json()[simId].W = W
         js.outputs.as_py_json()[simId].bias = Smean - Pmean @ W
         js.outputs.as_py_json()[simId].cond = cond
-        js.outputs.as_py_json()[simId].ytarg = Sclip + Smean
-        js.outputs.as_py_json()[simId].yhat = (Pclip @ W) + Smean
-        js.outputs.as_py_json()[simId].res = np.mean(np.square(Sclip - (Pclip @ W)))
 `;
 
 function renderArray2D(canvasId, array) {
@@ -299,8 +300,7 @@ function evenBurners(dim, num) {
     for (let i = 0; i < num; i++) {
         let row = [];
         row = row.concat((i + 1) / (num + 1));
-        row = row.concat((i + 1) / (num + 1));
-        // row = row.concat(Array(dim - 1).fill(0));
+        row = row.concat(Array(dim - 1).fill(0));
         result[i] = row;
     }
     return result;
