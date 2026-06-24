@@ -69,7 +69,7 @@ const navier_script = `
         U_x = diags_array(u[:,:,0].ravel(order='F'))
         U_y = diags_array(u[:,:,1].ravel(order='F'))
 
-        nu = 8e-5
+        nu = 2e-5
 
         convection = (U_x @ OPS[simId]['Dx']) + (U_y @ OPS[simId]['Dy'])
         momentum = nu * OPS[simId]['Lnn'] - convection
